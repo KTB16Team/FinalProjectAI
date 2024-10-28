@@ -12,29 +12,70 @@ router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
 situation_summary
-@router.post("/infos/voice")
-async def get_voice(link: str = "") -> voice_info:
+@router.post("/api/v1/ai/private-posts/stt", response_model=STTResponse, status_code=201)
+async def get_voice(request: STTRequest, authorization: str = Header(...)):
+    # 인증 헤더 검사
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="AUTH-001")
+
     logger.info("get_infos start")
-    logger.info(f"message : {link}")
+    logger.info(f"audio URL : {request.audio}")
 
-    entities = json.loads(stt_model(link))
-    logger.info(f"entities : {entities}")
+    # STT 처리 예시
+    try:
+        entities = json.loads(stt_model(request.audio))
+        logger.info(f"entities : {entities}")
+    except Exception as e:
+        logger.error(f"Error processing STT request: {e}")
+        raise HTTPException(status_code=500, detail="COMMON-003")
 
-    response: voice_info = voice_info(**json.loads(generate_response(entities)))
+    # 응답 데이터 생성
+    response = STTResponse(
+        status="Created",
+        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        data=STTResponseData(
+            title="제목",
+            ai_stt=entities.get("ai_stt", "AI STT 결과")
+        )
+    )
+
     logger.info(f"response : {response}")
-
     return response
 
-@router.post("/infos")
-async def get_infos(message: str = "") -> info:
-    logger.info("get_infos start")
-    logger.info(f"message : {message}")
+# 첫 번째 엔드포인트 /api/v1/ai/private-posts/judge
+@router.post("/api/v1/ai/private-posts/judge", response_model=DataInfoSummary)
+async def process_judge(request: DataInfoSummary, authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="AUTH-001")
 
-    entities = json.loads(situation_summary_GPT(message))
-    logger.info(f"entities : {entities}")
+    logger.info("Starting judge processing")
+    try:
+        entities = json.loads(situation_summary_GPT(request.summary_ai))
+        logger.info(f"Entities processed: {entities}")
+    except Exception as e:
+        logger.error(f"Error in GPT processing: {e}")
+        raise HTTPException(status_code=500, detail="COMMON-003")
 
-    response: info = info(**json.loads(generate_response(entities)))
-    logger.info(f"response : {response}")
+    response = DataInfoSummary(
+        title=request.title,
+        stance_plaintiff=entities.get("stance_plaintiff"),
+        stance_defendant=entities.get("stance_defendant"),
+        summary_ai=entities.get("summary_ai"),
+        judgement=entities.get("judgement"),
+        fault_rate=entities.get("fault_rate")
+    )
+
+    # /api/v1/private-posts로 결과 전송
+    async with httpx.AsyncClient() as client:
+        try:
+            await client.post(
+                "http://localhost:8000/api/v1/private-posts",
+                json=response.dict(),
+                headers={"Authorization": authorization}
+            )
+        except httpx.HTTPError as err:
+            logger.error(f"Failed to forward to /api/v1/private-posts: {err}")
+            raise HTTPException(status_code=500, detail="COMMON-003")
 
     return response
 
