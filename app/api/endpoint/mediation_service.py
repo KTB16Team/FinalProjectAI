@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from sqlalchemy import text
 
 from app.db.database import engine
-from app.models.info import info, voice_info
+from app.models.info import DataInfoSummary, voice_info
 from app.services.situation_summary import situation_summary_GPT,stt_model,generate_response
 import logging
 
@@ -12,7 +12,7 @@ router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
 situation_summary
-@router.post("/api/v1/ai/private-posts/stt", response_model=STTResponse, status_code=201)
+@router.post("/stt", response_model=STTResponse, status_code=201)
 async def get_voice(request: STTRequest, authorization: str = Header(...)):
     # 인증 헤더 검사
     if not authorization.startswith("Bearer "):
@@ -43,7 +43,7 @@ async def get_voice(request: STTRequest, authorization: str = Header(...)):
     return response
 
 # 첫 번째 엔드포인트 /api/v1/ai/private-posts/judge
-@router.post("/api/v1/ai/private-posts/judge", response_model=DataInfoSummary)
+@router.post("/judge", response_model=DataInfoSummary)
 async def process_judge(request: DataInfoSummary, authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="AUTH-001")
