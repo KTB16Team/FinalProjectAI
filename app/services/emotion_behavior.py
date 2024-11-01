@@ -8,7 +8,7 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-
+import time
 load_dotenv()
 # 스탠스 변화 부분 볼려면 인덱스 필요
 class DialogueLine(BaseModel):
@@ -129,13 +129,24 @@ class RelationshipAnalyzer:
                 prompt.format_messages(dialogue_lines=dialogue_text)
             ])
             print("Response text:", response.generations[0][0].text)
+            print("Response text:", response)
+            print('errorcheck')
             result = json.loads(response.generations[0][0].text)
-            return [StanceAction(**action) for action in result["stance_actions"]]
+            print("1check")
+            print(type(result))
+            print(result)
+            print([StanceAction(**action) for action in result['stance_actions']])
+            result2 = [StanceAction(**action) for action in result['stance_actions']]
+            print("last",type(result2))
+            return result2
+            # return [StanceAction(**action) for action in result['stance_actions']]
+
         except Exception as e:
             print(f"Stance analysis error: {str(e)}")
             raise
 # 감정 점수를 저런식으로 나누는 기준을 애초부터 나눌지 아니면 알아서 판단하라 할지
     async def analyze_emotional_impact(self, dialogue_lines: List[DialogueLine], stance_actions: List[StanceAction]) -> EmotionalAnalysis:
+
         stance_info =[
             {
                 "index": action.index,
@@ -144,7 +155,7 @@ class RelationshipAnalyzer:
             }
             for action in stance_actions
         ]
-        
+        print('fine')
         
         prompt_template="""
         You are an expert in analyzing emotional impacts in relationships
@@ -180,8 +191,8 @@ class RelationshipAnalyzer:
 
         Return the analysis in the following JSON format:
         {{
-          "emotional_analysis": [
-            {{
+          "emotional_analysis":{{
+            a_to_b_impact:{{
               "from_party": "A",
               "to_party": "B",
               "impact_score": -1.0 to 1.0,
@@ -189,6 +200,7 @@ class RelationshipAnalyzer:
               "impact_description": "detailed description",
               "relevant_dialogue_indices": [indices]
             }},
+            a_to_b_impact:
             {{
               "from_party": "B",
               "to_party": "A",
@@ -197,7 +209,7 @@ class RelationshipAnalyzer:
               "impact_description": "detailed description",
               "relevant_dialogue_indices": [indices]
             }}
-          ]
+          }}
         }}
 
         Return strictly JSON output only. No explanation, no additional text.
@@ -215,8 +227,8 @@ class RelationshipAnalyzer:
             ])
 
             result = json.loads(response.generations[0][0].text)
-            
             analysis_data = result["emotional_analysis"]
+            print(analysis_data)
             return EmotionalAnalysis(
                 a_to_b_impact=EmotionalImpact(**analysis_data["a_to_b_impact"]),
                 b_to_a_impact=EmotionalImpact(**analysis_data["b_to_a_impact"])
@@ -229,6 +241,7 @@ class RelationshipAnalyzer:
 
     async def analyze(self, text: str) -> Dict:
       from datetime import datetime
+
       dialogue_lines = self.parse_dialogue(text)
       stance_results = await self.analyze_stance_changes(dialogue_lines)
       emotional_results = await self.analyze_emotional_impact(dialogue_lines, stance_results)
@@ -242,6 +255,7 @@ class RelationshipAnalyzer:
       }
   
 async def test_analysis():
+    start_time = time.time()
     test_data = """
       A: 당신 때문에 정말 화가나요! 약속 시간도 지키지 않고, 연락도 없고...
       B: 죄송해요... 제가 일이 좀 바빠서...
@@ -255,7 +269,7 @@ async def test_analysis():
     try:
         print("분석 시작...")
         result = await analyzer.analyze(test_data)
-        
+
         print("\n대화 라인:")
         for line in result["dialogue_lines"]:
             print(f"{line['index']}. {line['speaker']}: {line['text']}")
@@ -284,7 +298,13 @@ async def test_analysis():
         print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
         print(f"영향 설명: b_to_a['impact_description']")
         print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
-        
+
+        end_time = time.time()
+
+        # 소요 시간 계산
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time: {elapsed_time} seconds")
+
     except Exception as e:
         print(f"에러 발생: {str(e)}")
         raise
