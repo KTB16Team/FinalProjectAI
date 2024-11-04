@@ -9,6 +9,7 @@ from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import time
+
 load_dotenv()
 # 스탠스 변화 부분 볼려면 인덱스 필요
 class DialogueLine(BaseModel):
@@ -32,6 +33,7 @@ class EmotionalImpact(BaseModel):
     emotional_state: List[str] = Field(description="주요 감정 상태")
     impact_description: str = Field(description="감정적 영향 설명")
     relevant_dialogue_indices: List[int] = Field(description="관련된 대화 인덱스")
+
 #나중에 감정분석결과 A,B 입장 따로 스코어 매길거라
 class EmotionalAnalysis(BaseModel):
     a_to_b_impact: EmotionalImpact = Field(description="A가 B에게 미치는 감정 영향")
@@ -42,6 +44,17 @@ class AnalysisResult(BaseModel):
     stance_actions: List[StanceAction]
     emotional_impact: EmotionalAnalysis
     analysis_timestamp: str = Field(description="분석 수행 시간")
+
+class SituationCase(BaseModel):
+    event: str = Field(description="이벤트 설명")
+    participants: str = Field(description="참여자")
+    result: str = Field(description="결과")
+    time_frame: str = Field(description="시간 프레임")
+    score: float = Field(description="중요도 점수 (0-1)")
+
+class SituationSummary(BaseModel):
+    situation_summary: str = Field(description="상황 요약")
+    cases: List[SituationCase] = Field(description="상황 케이스들")
 
 class RelationshipAnalyzer:
     def __init__(self):
@@ -68,12 +81,97 @@ class RelationshipAnalyzer:
         
         return dialogue_lines
 #어떤 사람이 변화를 보여줬는지 party를 추출하는 것도 의미가 있을지?
-    async def analyze_stance_changes(self, dialogue_lines: List[DialogueLine]) -> List[StanceAction]:
+
+    async def summarize_and_evaluate_situation(self, dialogue_lines: List[DialogueLine]) -> SituationSummary:
+        prompt_template = """
+        original text : {dialogue_lines}
+        
+        You are an evaluator that performs both a summary of the situation and an objective analysis of each key event.
+        
+        1. situation_summary:
+        - Summarize the situation provided by the user.
+        - Replace the user with A, the person they are speaking to with B, and other individuals with C, D, E, etc.
+        - Ensure that significant events involving each speaker are not omitted in the summary.
+        - Provide an objective and neutral summary.
+        
+        2. situation evaluation:
+        For each case extracted from the summarized situation, focus on objective events, excluding attitudes or emotions.
+        
+        Each situation case should follow this format:
+        - situation_case1, situation_case2, ... : Key situation evaluation cases extracted from the summary.
+            - event : A brief description of the event
+            - participants : Key participants in the event.
+            - result : The outcome or result of the event
+            - time_frame : “Time frame” refers to the chronological order of events based on their context. For example, 
+                            if the time frame for “situation_case1” is 1 and for “situation_case2” is 3, this indicates the sequential position of each event. 
+                            The sequence is arranged according to the cause-and-effect relationship or the timeline in which each case occurs.
+            - score : The score of the situation, ranging from 0 to 1 (0 being least important, 1 being most important)
+        
+        Return only the following JSON format without any additional text:
+        {{
+        "situation_summary": "complete situation summary",
+        "situation_cases": [
+            {{
+                "event": "event description",
+                "participants": "A, B",
+                "result": "event result",
+                "time_frame": "1",
+                "score": 0.8
+            }},
+            ...
+        ]
+    }}
+        Include only clear stance changes - not every dialogue line will represent a change point.
+        Return strictly JSON output only. No explanation, no additional text.
+        
+        Take a deep breath and step by step.
+        """ 
+
+        dialogue_text = "\n".join([f"{line.index}. {line.speaker}: {line.text}" for line in dialogue_lines])
+        prompt = ChatPromptTemplate.from_template(template=prompt_template)
+
+        try:
+            response = await self.llm.agenerate([
+                prompt.format_messages(dialogue_lines=dialogue_text)
+            ])
+            
+            response_text = response.generations[0][0].text.strip()
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            
+            result = json.loads(response_text)
+            # print(result) 
+            cases = [SituationCase(**case) for case in result.get("situation_cases", [])]
+            summary = SituationSummary(
+                situation_summary=result["situation_summary"],
+                cases=cases
+            )
+            # print(summary)
+            return summary
+        
+        except json.JSONDecodeError as e:
+            print(f"JSON 파싱 에러: {str(e)}")
+            print(f"원본 응답: {response_text}")
+            raise
+        except Exception as e:
+            print(f"상황 분석 에러: {str(e)}")
+            raise
+        
+    async def analyze_stance_changes(self, dialogue_lines: List[DialogueLine], situation_results: SituationSummary) -> List[StanceAction]:
+        
         prompt_template="""
         You are an expert in analyzing relationship dynamics and behavioral changes.
 
         Analyze the following conversation and identify points where a party's stance changes.
         
+        Situation Summary:
+        {situation_summary}
+
+        Key Events:
+        {situation_cases}
+
         Dialogue:
         {dialogue_lines}
                                                          
@@ -122,11 +220,20 @@ class RelationshipAnalyzer:
         """       
 
         dialogue_text = "\n".join([f"{line.index}. {line.speaker}: {line.text}" for line in dialogue_lines])
+        situation_summary_text = situation_results.situation_summary
+        situation_cases_text = "\n".join([
+            f"- Event: {case.event}, Participants: {case.participants}, Result: {case.result}, Time Frame: {case.time_frame}, Score: {case.score}"
+            for case in situation_results.cases
+        ])
+
         prompt = ChatPromptTemplate.from_template(template=prompt_template)
 
         try:
             response = await self.llm.agenerate([
-                prompt.format_messages(dialogue_lines=dialogue_text)
+                prompt.format_messages(
+                    situation_summary = situation_summary_text,
+                    situation_cases = situation_cases_text,
+                    dialogue_lines=dialogue_text)
             ])
             # 모델 변경시 안돌아갔던 부분 수정 코드
             response_text = response.generations[0][0].text.strip()
@@ -134,16 +241,16 @@ class RelationshipAnalyzer:
                 response_text = response_text[7:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
-            print("Response text:", response.generations[0][0].text)
-            print("Response text:", response)
+            # print("Response text:", response.generations[0][0].text)
+            # print("Response text:", response)
             # print('errorcheck')
             result = json.loads(response_text)
             # print("1check")
-            print(type(result))
-            print(result)
-            print([StanceAction(**action) for action in result['stance_actions']])
+            # print(type(result))
+            # print(result)
+            # print([StanceAction(**action) for action in result['stance_actions']])
             result2 = [StanceAction(**action) for action in result['stance_actions']]
-            print("last",type(result2))
+            # print("last",type(result2))
             return result2
             # return [StanceAction(**action) for action in result['stance_actions']]
 
@@ -161,7 +268,6 @@ class RelationshipAnalyzer:
             }
             for action in stance_actions
         ]
-        print('fine')
         
         prompt_template="""
         You are an expert in analyzing emotional impacts in relationships
@@ -238,7 +344,7 @@ class RelationshipAnalyzer:
                 response_text = response_text[:-3]
             result = json.loads(response_text)
             analysis_data = result["emotional_analysis"]
-            print(analysis_data)
+            # print(analysis_data)
             return EmotionalAnalysis(
                 a_to_b_impact=EmotionalImpact(**analysis_data["a_to_b_impact"]),
                 b_to_a_impact=EmotionalImpact(**analysis_data["b_to_a_impact"])
@@ -253,12 +359,14 @@ class RelationshipAnalyzer:
       from datetime import datetime
 
       dialogue_lines = self.parse_dialogue(text)
-      stance_results = await self.analyze_stance_changes(dialogue_lines)
+      situation_results = await self.summarize_and_evaluate_situation(dialogue_lines)#추가
+      stance_results = await self.analyze_stance_changes(dialogue_lines, situation_results)
       emotional_results = await self.analyze_emotional_impact(dialogue_lines, stance_results)
       
       # Pydantic 모델을 딕셔너리로 변환
       return {
           "dialogue_lines": [line.dict() for line in dialogue_lines],
+          "situation_summary": situation_results.dict(),
           "stance_actions": [action.dict() for action in stance_results],
           "emotional_analysis": emotional_results.dict() if emotional_results else None,
           "analysis_timestamp": datetime.now().isoformat()
@@ -284,6 +392,18 @@ async def test_analysis():
         for line in result["dialogue_lines"]:
             print(f"{line['index']}. {line['speaker']}: {line['text']}")
         
+        situation_summary = result["situation_summary"]
+        print("\n상황 요약:")
+        print(f"{situation_summary['situation_summary']}")
+        
+        print("\n상황 케이스들:")
+        for case in situation_summary["cases"]:
+            print(f"- 이벤트: {case['event']}")
+            print(f"  참여자: {case['participants']}")
+            print(f"  결과: {case['result']}")
+            print(f"  시간 프레임: {case['time_frame']}")
+            print(f"  중요도 점수: {case['score']}\n")
+
         print("\n스탠스 변화 지점:")
         for action in result["stance_actions"]:
             print(f"\n대화 인덱스 {action['index']}:")
