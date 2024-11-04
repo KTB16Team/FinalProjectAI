@@ -47,7 +47,7 @@ class RelationshipAnalyzer:
     def __init__(self):
         self.llm = ChatOpenAI(
             temperature=0.2, #어느정도로 할건지?
-            model="gpt-4",
+            model="gpt-4o", #gpt-4는 되는데 4o는 안된다..?
             api_key=os.getenv('OPENAI_API_KEY')
         )
         self.parser = PydanticOutputParser(pydantic_object=AnalysisResult)
@@ -128,11 +128,17 @@ class RelationshipAnalyzer:
             response = await self.llm.agenerate([
                 prompt.format_messages(dialogue_lines=dialogue_text)
             ])
+            # 모델 변경시 안돌아갔던 부분 수정 코드
+            response_text = response.generations[0][0].text.strip()
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
             print("Response text:", response.generations[0][0].text)
             print("Response text:", response)
-            print('errorcheck')
-            result = json.loads(response.generations[0][0].text)
-            print("1check")
+            # print('errorcheck')
+            result = json.loads(response_text)
+            # print("1check")
             print(type(result))
             print(result)
             print([StanceAction(**action) for action in result['stance_actions']])
@@ -225,8 +231,12 @@ class RelationshipAnalyzer:
                     stance_info=json.dumps(stance_info, indent=2, ensure_ascii=False)
                 )
             ])
-
-            result = json.loads(response.generations[0][0].text)
+            response_text = response.generations[0][0].text.strip()
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            result = json.loads(response_text)
             analysis_data = result["emotional_analysis"]
             print(analysis_data)
             return EmotionalAnalysis(
