@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException
 from sqlalchemy import text
 
 from app.db.database import engine
@@ -11,7 +11,7 @@ import logging
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
-situation_summary
+
 @router.post("/stt", response_model=STTResponse, status_code=201)
 async def get_voice(request: STTRequest, authorization: str = Header(...)):
     # 인증 헤더 검사

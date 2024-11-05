@@ -1,5 +1,5 @@
 def situation_summary_GPT(text):
-    return "A"
+    return ""
 
 def stt_model(link):
     return "text"

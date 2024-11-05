@@ -8,7 +8,7 @@ class DataInfoSTT(BaseModel):
 
 class DataInfoSummary(BaseModel):
     title: Optional[str]
-    stance_plaintiff: Optional[str]
+    stancePlaintiff: Optional[str]
     stance_defendant: Optional[str]
     summary_ai: Optional[str]
     judgement: Optional[str]
