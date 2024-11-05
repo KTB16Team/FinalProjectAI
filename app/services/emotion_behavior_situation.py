@@ -51,6 +51,7 @@ class SituationCase(BaseModel):
     score: float = Field(description="중요도 점수 (0-1)")
 
 class SituationSummary(BaseModel):
+    title: str = Field(description="제목")
     situation_summary: str = Field(description="상황 요약")
     cases: List[SituationCase] = Field(description="상황 케이스들")
 
@@ -58,7 +59,7 @@ class RelationshipAnalyzer:
     def __init__(self):
         self.llm = ChatOpenAI(
             temperature=0.2, #어느정도로 할건지?
-            model="gpt-4o", #gpt-4는 되는데 4o는 안된다..?
+            model="gpt-4o", 
             api_key=os.getenv('OPENAI_API_KEY')
         )
         self.parser = PydanticOutputParser(pydantic_object=AnalysisResult)
@@ -92,7 +93,13 @@ class RelationshipAnalyzer:
         - Ensure that significant events involving each speaker are not omitted in the summary.
         - Provide an objective and neutral summary.
         
-        2. situation evaluation:
+        2. title:
+        - Generate a single-line title that is intriguing and captivating.
+        - Make sure the title arouses curiosity and is slightly provocative to attract readers.
+        - Ensure the title is directly related to the situation and sounds dramatic or unexpected.
+
+
+        3. situation evaluation:
         For each case extracted from the summarized situation, focus on objective events, excluding attitudes or emotions.
         
         Each situation case should follow this format:
@@ -107,6 +114,7 @@ class RelationshipAnalyzer:
         
         Return only the following JSON format without any additional text:
         {{
+        "title": "intriguing and captivating title"
         "situation_summary": "complete situation summary",
         "situation_cases": [
             {{
@@ -121,6 +129,7 @@ class RelationshipAnalyzer:
     }}
         Include only clear stance changes - not every dialogue line will represent a change point.
         Return strictly JSON output only. No explanation, no additional text.
+        Please print in Korean.
         
         Take a deep breath and step by step.
         """ 
@@ -140,13 +149,15 @@ class RelationshipAnalyzer:
                 response_text = response_text[:-3]
             
             result = json.loads(response_text)
+            print("summarize_and_evaluate_situation result:", result) 
+            # title = result.get("title", "Untitled")
             # print(result) 
             cases = [SituationCase(**case) for case in result.get("situation_cases", [])]
             summary = SituationSummary(
+                title=result["title"],
                 situation_summary=result["situation_summary"],
                 cases=cases
             )
-            # print(summary)
             return summary
         
         except json.JSONDecodeError as e:
@@ -390,13 +401,22 @@ class RelationshipAnalyzer:
         {stance_changes}
 
         Based on the above data, deliver a final judgment statement that:
-        1. Summarizes the perspectives of both A and B based on the provided summaries.
-        2. Clearly outlines the culpability percentages and explains the reasoning behind them.
-        3. Concludes with an objective final statement on the overall fault distribution and resolution advice if applicable.
+        1. Separately summarize the perspectives of both A and B based on the provided summaries.
+        2. Clearly outline the culpability percentages and explain the reasoning behind them.
+        3. Concludes with an objective final statement on the overall fault distribution and provides a resolution or advice.
+            - In the conclusion section, do not include any mention of fault ratios or advice.
+            - Focus only on offering advice, constructive feedback, or actionable recommendations for conflict resolution without referencing any quantitative assessment of fault.
+            - Speak as a caring counselor might, encouraging reflection, open communication, and mutual empathy to foster a path toward resolution.
         4. Please print in Korean.
 
-        Final Output Format:
-        "Judgment Statement: complete judgment text"
+        Return only the following JSON format without any additional text:
+        {{
+        "A_position": "A's summarized perspective",
+        "B_position": "B's summarized perspective",
+        "conclusion": "Detailed advice or final resolution statement without fault distribution"
+        }}
+
+        Take a deep breath and step by step.
         """
 
         situation_summary_text = situation_results.situation_summary
@@ -424,7 +444,18 @@ class RelationshipAnalyzer:
             ])
             response_text = response.generations[0][0].text.strip()
 
-            return response_text.replace("Judgment Statement:", "").strip()
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            result = json.loads(response_text)
+
+            return {
+                "A_position": result["A_position"],
+                "B_position": result["B_position"],
+                "conclusion": result["conclusion"]
+            }
+        
         except Exception as e:
             print(f"Judgment statement generation error: {str(e)}")
             raise 
@@ -471,6 +502,9 @@ async def test_analysis():
         for line in result["dialogue_lines"]:
             print(f"{line['index']}. {line['speaker']}: {line['text']}")
         
+        print("\n제목:")
+        print(result["situation_summary"]["title"])
+
         situation_summary = result["situation_summary"]
         print("\n상황 요약:")
         print(f"{situation_summary['situation_summary']}")
@@ -513,7 +547,14 @@ async def test_analysis():
         print(f"B의 과실 비율: {result['fault_ratios']['B'] * 100:.2f}%")
 
         print("\n판결문:")
-        print(result["judgement"])
+        print("\nA의 입장:")
+        print(result["judgement"]["A_position"])
+
+        print("\nB의 입장:")
+        print(result["judgement"]["B_position"])
+
+        print("\n결론:")
+        print(result["judgement"]["conclusion"])
 
         end_time = time.time()
 
