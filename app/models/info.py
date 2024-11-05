@@ -1,18 +1,19 @@
 from pydantic import BaseModel
 from typing import Optional, Union, List
 from datetime import datetime
-from 
+from app.services.emotion_behavior_situation import RelationshipAnalyzer, SituationSummary
+
 class DataInfoSTT(BaseModel):
     title: Optional[str]
-    aiStt: Optional[str]
+    script: Optional[str]
 
 class DataInfoSummary(BaseModel):
     title: Optional[str]
     stancePlaintiff: Optional[str]
     stanceDefendant: Optional[str]
-    summaryAi: Optional[str]
-    judgement: Optional[str]
-    faultRate: Optional[float]
+    summaryAi: SituationSummary
+    judgement: 
+    faultRate: 
 
 class VoiceInfo(BaseModel):
     status: Optional[str]
