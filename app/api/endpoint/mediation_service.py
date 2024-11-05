@@ -13,9 +13,6 @@ logger = logging.getLogger("uvicorn")
 
 @router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
 async def get_voice(request: STTRequest, authorization: str = Header(...)):
-    # 인증 헤더 검사
-    if not authorization.startswith("Bear "):
-        raise HTTPException(status_code=401, detail="AUTH-001")
 
     logger.info("get_infos start")
     logger.info(f"audio URL : {request.url}")
@@ -43,8 +40,6 @@ async def get_voice(request: STTRequest, authorization: str = Header(...)):
 # 첫 번째 엔드포인트 /api/v1/ai/private-posts/judgement
 @router.post("/judgement", response_model=DataInfoSummary,status_code=201)
 async def process_judge(request: JudgeRequest, authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="AUTH-001")
 
     logger.info("Starting judge processing")
     try:
