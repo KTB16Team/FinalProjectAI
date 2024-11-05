@@ -4,15 +4,20 @@ from datetime import datetime
 
 class DataInfoSTT(BaseModel):
     title: Optional[str]
-    ai_stt: Optional[str]
+    aiStt: Optional[str]
 
 class DataInfoSummary(BaseModel):
     title: Optional[str]
     stancePlaintiff: Optional[str]
+<<<<<<< Updated upstream
     stance_defendant: Optional[str]
     summary_ai: Optional[str]
+=======
+    stanceDefendant: Optional[str]
+    summaryAi: Optional[str]
+>>>>>>> Stashed changes
     judgement: Optional[str]
-    fault_rate: Optional[float]
+    faultRate: Optional[float]
 
 class VoiceInfo(BaseModel):
     status: Optional[str]
