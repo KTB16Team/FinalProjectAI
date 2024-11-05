@@ -7,10 +7,8 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_community.chat_models import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
-from dotenv import load_dotenv
 import time
 
-load_dotenv()
 # 스탠스 변화 부분 볼려면 인덱스 필요
 class DialogueLine(BaseModel):
     index: int = Field(description="대화 문장의 인덱스")
@@ -29,7 +27,7 @@ class StanceAction(BaseModel):
 class EmotionalImpact(BaseModel):
     from_party: str = Field(description="영향을 주는 참여자")
     to_party: str = Field(description="영향을 받는 참여자")
-    impact_score: float = Field(description="감정 영향 점수 (-1 ~ +1)")
+    impact_score: float = Field(description="감정 영향 점수")
     emotional_state: List[str] = Field(description="주요 감정 상태")
     impact_description: str = Field(description="감정적 영향 설명")
     relevant_dialogue_indices: List[int] = Field(description="관련된 대화 인덱스")
@@ -483,15 +481,15 @@ async def test_analysis():
             print(f"  참여자: {case['participants']}")
             print(f"  결과: {case['result']}")
             print(f"  시간 프레임: {case['time_frame']}")
-            print(f"  중요도 점수: {case['score']}\n")
+            print(f"  상황 점수: {case['score']}\n")
 
         print("\n스탠스 변화 지점:")
         for action in result["stance_actions"]:
-            print(f"\n대화 인덱스 {action['index']}:")
-            print(f"대화 내용: {action['dialogue_text']}")
+            print(f"\n액션 인덱스 {action['index']}:")
+            print(f"액션 내용: {action['dialogue_text']}")
             print(f"변화 주체: {action['party']}")
             print(f"태도 분류: {action['stance_classification']}")
-            print(f"과실 점수: {action['score']}")
+            print(f"행동 평가 점수: {action['score']}")
         
         print("\n감정 영향 분석:")
         emotional = result["emotional_analysis"]
