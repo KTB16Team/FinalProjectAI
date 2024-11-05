@@ -14,7 +14,7 @@ logger = logging.getLogger("uvicorn")
 @router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
 async def get_voice(request: STTRequest, authorization: str = Header(...)):
     # 인증 헤더 검사
-    if not authorization.startswith("Bearer "):
+    if not authorization.startswith("Bear "):
         raise HTTPException(status_code=401, detail="AUTH-001")
 
     logger.info("get_infos start")
@@ -33,7 +33,7 @@ async def get_voice(request: STTRequest, authorization: str = Header(...)):
         status="Created",
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         data=DataInfoSTT(
-            script=entities.get("ai_stt", "AI STT 결과")
+            script=entities.get("ai_stt")
         )
     )
 
