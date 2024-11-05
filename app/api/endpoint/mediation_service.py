@@ -11,7 +11,6 @@ import logging
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
-situation_summary
 @router.post("/infos/voice")
 async def get_voice(link: str = "") -> voice_info:
     logger.info("get_infos start")
