@@ -23,7 +23,7 @@ user_profiles = {
 
 async def gpt_mediation(prompt):
     response = openai.ChatCompletion.create(
-        model="gpt-4o",
+        model="gpt-4-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that provides relationship mediation."},
             {"role": "user", "content": prompt}
@@ -75,6 +75,3 @@ async def mediate(request: Request):
         "partner_analysis": partner_analysis,
         "fault_analysis": fault_analysis
     }
-
-# FastAPI 서버 실행
-# (로컬에서 실행하려면 터미널에서 `uvicorn filename:app --reload` 명령어 사용)
