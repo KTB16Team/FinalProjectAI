@@ -353,30 +353,25 @@ class RelationshipAnalyzer:
     
     async def calculate_fault_ratio(self, situation_results: SituationSummary, stance_results: List[StanceAction], emotional_analysis: EmotionalAnalysis) -> Dict[str, float]:
         """
-        Calculate fault score using a simple formula:
-        (Situation Score * Behavior Score) / Emotion Score.]
-
         Calculate fault ratio ensuring the total equals 100%.
-
-        Take a deep breath and step by step.
         """
 
         situation_score = sum(case.score for case in situation_results.cases) / len(situation_results.cases) if situation_results.cases else 1.0
-
         behavior_score = sum(action.score for action in stance_results) / len(stance_results) if stance_results else 1.0
+        
+        emotion_score_a_to_b = max(0.01, (1 - emotional_analysis.a_to_b_impact.impact_score))
+        emotion_score_b_to_a = max(0.01, (1 - emotional_analysis.b_to_a_impact.impact_score))
+        
+        fault_score_a = situation_score * behavior_score * emotion_score_a_to_b
+        fault_score_b = situation_score * behavior_score * emotion_score_b_to_a
 
-        emotion_score_a_to_b = emotional_analysis.a_to_b_impact.impact_score or 0.01
-        emotion_score_b_to_a = emotional_analysis.b_to_a_impact.impact_score or 0.01
-
-        fault_score_a = (situation_score * behavior_score) / (1-emotion_score_a_to_b)
-        fault_score_b = (situation_score * behavior_score) / (1-emotion_score_b_to_a)
-
-        fault_score_a = fault_score_a / (fault_score_a + fault_score_b)
-        fault_score_b = fault_score_b / (fault_score_a + fault_score_b)
+        total_score = fault_score_a + fault_score_b
+        fault_ratio_a = fault_score_a / total_score
+        fault_ratio_b = fault_score_b / total_score
         
         return {
-            "A": round(fault_score_a, 2),
-            "B": round(fault_score_b, 2)
+            "A": round(fault_ratio_a, 2),
+            "B": round(fault_ratio_b, 2)
         }
     
     async def generate_judgment_statement(self, situation_results: SituationSummary, fault_ratios: Dict[str, float], stance_results: List[StanceAction]) -> str:
@@ -434,7 +429,7 @@ class RelationshipAnalyzer:
             return response_text.replace("Judgment Statement:", "").strip()
         except Exception as e:
             print(f"Judgment statement generation error: {str(e)}")
-            raise
+            raise 
 
 
     async def analyze(self, text: str) -> Dict:
