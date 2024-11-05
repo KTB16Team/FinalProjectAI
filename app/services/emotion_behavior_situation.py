@@ -270,7 +270,7 @@ class RelationshipAnalyzer:
         ]
         
         prompt_template="""
-        You are an expert in analyzing emotional impacts in relationships
+        You are an expert in analyzing emotional impacts in relationships.
 
         Analyze the emotional impact between parties in the following conversation:
 
@@ -286,14 +286,10 @@ class RelationshipAnalyzer:
         1. The overall context from the original text
         2. The specific stance changes and their classifications       
                                                                                                         
-        For each party (A and B), analyze:
-        1. Emotional impact score (-1 to +1)
-           - Severe negative: -1.0 to -0.7
-           - Moderate negative: -0.7 to -0.3
-           - Slight negative: -0.3 to 0
-           - Slight positive: 0 to 0.3
-           - Moderate positive: 0.3 to 0.7
-           - Strong positive: 0.7 to 1.0
+        Scoring Mechanism:
+          - Positive and constructive actions should be reflected with a high score close to 1, while negative or destructive actions result in a score closer to 0
+          - Maintain scores between 0.1 and 1 only. 
+          - Ensure no behavior score is exactly 0, preventing division errors errors.
 
         2. For each direction (A→B and B→A), provide:
           - Impact score within the range
@@ -307,7 +303,7 @@ class RelationshipAnalyzer:
             a_to_b_impact:{{
               "from_party": "A",
               "to_party": "B",
-              "impact_score": -1.0 to 1.0,
+              "impact_score": 0.1 to 1,
               "emotional_state": ["emotion1", "emotion2", ...],
               "impact_description": "detailed description",
               "relevant_dialogue_indices": [indices]
@@ -316,7 +312,7 @@ class RelationshipAnalyzer:
             {{
               "from_party": "B",
               "to_party": "A",
-              "impact_score": -1.0 to 1.0,
+              "impact_score": 0.1 to 1,
               "emotional_state": ["emotion1", "emotion2", ...],
               "impact_description": "detailed description",
               "relevant_dialogue_indices": [indices]
@@ -354,6 +350,92 @@ class RelationshipAnalyzer:
             print(f"Emotional analysis error: {str(e)}")
             print(f"Raw response: {response.generations[0][0].text if 'response' in locals() else 'No response'}")
             raise
+    
+    async def calculate_fault_ratio(self, situation_results: SituationSummary, stance_results: List[StanceAction], emotional_analysis: EmotionalAnalysis) -> Dict[str, float]:
+        """
+        Calculate fault score using a simple formula:
+        (Situation Score * Behavior Score) / Emotion Score.]
+
+        Calculate fault ratio ensuring the total equals 100%.
+
+        Take a deep breath and step by step.
+        """
+
+        situation_score = sum(case.score for case in situation_results.cases) / len(situation_results.cases) if situation_results.cases else 1.0
+
+        behavior_score = sum(action.score for action in stance_results) / len(stance_results) if stance_results else 1.0
+
+        emotion_score_a_to_b = emotional_analysis.a_to_b_impact.impact_score or 0.01
+        emotion_score_b_to_a = emotional_analysis.b_to_a_impact.impact_score or 0.01
+
+        fault_score_a = (situation_score * behavior_score) / (1-emotion_score_a_to_b)
+        fault_score_b = (situation_score * behavior_score) / (1-emotion_score_b_to_a)
+
+        fault_score_a = fault_score_a / (fault_score_a + fault_score_b)
+        fault_score_b = fault_score_b / (fault_score_a + fault_score_b)
+        
+        return {
+            "A": round(fault_score_a, 2),
+            "B": round(fault_score_b, 2)
+        }
+    
+    async def generate_judgment_statement(self, situation_results: SituationSummary, fault_ratios: Dict[str, float], stance_results: List[StanceAction]) -> str:
+        prompt_template = """
+        You are an impartial arbitrator delivering a final judgment in a dispute. Given the following details:
+
+        Situation Summary:
+        {situation_summary}
+
+        Key Situation Cases:
+        {situation_cases}
+
+        Fault Ratios:
+        - Participant A's Fault Ratio: {a_fault_ratio}%
+        - Participant B's Fault Ratio: {b_fault_ratio}%
+
+        Behavioral Changes:
+        {stance_changes}
+
+        Based on the above data, deliver a final judgment statement that:
+        1. Summarizes the perspectives of both A and B based on the provided summaries.
+        2. Clearly outlines the culpability percentages and explains the reasoning behind them.
+        3. Concludes with an objective final statement on the overall fault distribution and resolution advice if applicable.
+        4. Please print in Korean.
+
+        Final Output Format:
+        "Judgment Statement: complete judgment text"
+        """
+
+        situation_summary_text = situation_results.situation_summary
+        situation_cases_text = "\n".join([
+            f"- Event: {case.event}, Participants: {case.participants}, Result: {case.result}, Time Frame: {case.time_frame}, Score: {case.score}"
+            for case in situation_results.cases
+        ])
+
+        stance_changes_text = "\n".join([
+            f"- Line {action.index}: {action.dialogue_text} (Stance: {action.stance_classification}, Score: {action.score})"
+            for action in stance_results
+        ])
+
+        prompt = ChatPromptTemplate.from_template(template=prompt_template)
+
+        try:
+            response = await self.llm.agenerate([
+                prompt.format_messages(
+                    situation_summary=situation_summary_text,
+                    situation_cases=situation_cases_text,
+                    a_fault_ratio=fault_ratios["A"],
+                    b_fault_ratio=fault_ratios["B"],
+                    stance_changes=stance_changes_text
+                )
+            ])
+            response_text = response.generations[0][0].text.strip()
+
+            return response_text.replace("Judgment Statement:", "").strip()
+        except Exception as e:
+            print(f"Judgment statement generation error: {str(e)}")
+            raise
+
 
     async def analyze(self, text: str) -> Dict:
       from datetime import datetime
@@ -362,14 +444,18 @@ class RelationshipAnalyzer:
       situation_results = await self.summarize_and_evaluate_situation(dialogue_lines)#추가
       stance_results = await self.analyze_stance_changes(dialogue_lines, situation_results)
       emotional_results = await self.analyze_emotional_impact(dialogue_lines, stance_results)
-      
+      fault_ratios = await self.calculate_fault_ratio(situation_results, stance_results, emotional_results)
+      judgement = await self.generate_judgment_statement(situation_results, fault_ratios, stance_results)
       # Pydantic 모델을 딕셔너리로 변환
       return {
           "dialogue_lines": [line.dict() for line in dialogue_lines],
           "situation_summary": situation_results.dict(),
           "stance_actions": [action.dict() for action in stance_results],
           "emotional_analysis": emotional_results.dict() if emotional_results else None,
+          "fault_ratios": fault_ratios,
+          "judgement": judgement,
           "analysis_timestamp": datetime.now().isoformat()
+
       }
   
 async def test_analysis():
@@ -428,6 +514,13 @@ async def test_analysis():
         print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
         print(f"영향 설명: b_to_a['impact_description']")
         print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
+
+        print("\n과실 비율:")
+        print(f"A의 과실 비율: {result['fault_ratios']['A'] * 100:.2f}%")
+        print(f"B의 과실 비율: {result['fault_ratios']['B'] * 100:.2f}%")
+
+        print("\n판결문:")
+        print(result["judgement"])
 
         end_time = time.time()
 
