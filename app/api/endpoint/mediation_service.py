@@ -1,6 +1,10 @@
 import json
 
+<<<<<<< Updated upstream
 from fastapi import APIRouter,HTTPException
+=======
+from fastapi import APIRouter, HTTPException
+>>>>>>> Stashed changes
 from sqlalchemy import text
 
 from app.db.database import engine
@@ -11,7 +15,10 @@ import logging
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 @router.post("/stt", response_model=STTResponse, status_code=201)
 async def get_voice(request: STTRequest, authorization: str = Header(...)):
     # 인증 헤더 검사
