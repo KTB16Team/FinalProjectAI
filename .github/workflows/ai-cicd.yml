@@ -58,7 +58,6 @@ jobs:
             
             # 새로운 컨테이너 실행 (CloudWatch 로그 설정 추가)
             docker run -d -p 8080:8080 \
-              --env-file .env \
               --name ai-service \
               --log-driver=awslogs \
               --log-opt awslogs-region=ap-northeast-2 \
