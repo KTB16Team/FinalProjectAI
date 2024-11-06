@@ -4,8 +4,8 @@ import httpx
 from sqlalchemy import text
 from datetime import datetime
 # from app.db.database import engine
-from app.models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
-from app.services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
+from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
+from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 import logging
 
 router = APIRouter()

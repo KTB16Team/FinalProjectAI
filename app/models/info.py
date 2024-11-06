@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, Union, List
 from datetime import datetime, date
-from app.services.emotion_behavior_situation import RelationshipAnalyzer, SituationSummary
+from services.emotion_behavior_situation import RelationshipAnalyzer, SituationSummary
 
 class DataInfoSTT(BaseModel):
     script: Optional[str]
