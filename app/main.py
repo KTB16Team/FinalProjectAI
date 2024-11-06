@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from app.api.endpoint.mediation_service import router as mediation_router
-from app.core.config import settings
+from api.endpoint.mediation_service import router as mediation_router
+from core.config import settings
 
 
 app = FastAPI(title=settings.PROJECT_NAME)
