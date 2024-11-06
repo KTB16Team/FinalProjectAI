@@ -62,7 +62,7 @@ jobs:
             --log-driver=awslogs \
             --log-opt awslogs-region=ap-northeast-2 \
             --log-opt awslogs-group=AimoAI_LogsMonitoring \
-            --log-opt awslogs-stream=ai-service-stream \
+            --log-opt awslogs-stream=AimoAI \
             ${{ secrets.ECR_REGISTRY }}:latest
 
 
