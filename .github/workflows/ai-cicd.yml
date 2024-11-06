@@ -2,9 +2,13 @@ name: AI ECR Build and Push  # 워크플로 이름 정의
 
 on:
   push:
-    branches: [ "dev" ]
+    branches:
+      - "dev"               
+      - "feature/cicd-test" # feature/cicd-test 브랜치 푸시 시 작동
   pull_request:
-    branches: [ "dev" ]
+    branches:
+      - "dev"
+      - "feature/cicd-test" # feature/cicd-test 브랜치의 PR 시에도 작동
 
 jobs:
   build-and-push:
