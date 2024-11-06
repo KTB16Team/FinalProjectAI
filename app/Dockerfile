@@ -11,7 +11,7 @@ ARG OPENAI_API_KEY
 ENV OPENAI_API_KEY=$OPENAI_API_KEY
 
 # requirements.txt 복사 및 종속성 설치
-COPY requirements.txt ./
+COPY app/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 애플리케이션 소스 코드 복사
