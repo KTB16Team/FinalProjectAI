@@ -41,3 +41,12 @@ jobs:
       - name: Push to Amazon ECR
         run: docker push ${{ secrets.ECR_REGISTRY }}:latest
         # 태그가 지정된 이미지를 Amazon ECR 리포지토리에 푸시
+        
+      # 6. 성공적인 이미지 푸시 후 디스코드 알림 전송
+      - name: Notify Discord
+        if: success()  # 이전 단계들이 성공했을 경우에만 실행
+        run: |
+          # Discord 웹훅을 통해 알림 전송
+          curl -H "Content-Type: application/json" \
+            -d '{"content": "ECR에 이미지가 성공적으로 푸시되었습니다!"}' \
+            https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
