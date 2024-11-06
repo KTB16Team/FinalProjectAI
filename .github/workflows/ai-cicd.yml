@@ -1,0 +1,39 @@
+name: AI ECR Build and Push  # 워크플로 이름 정의
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest  # 최신 우분투 환경에서 실행
+
+    steps:
+      # 1. 레포지토리 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4  # GitHub Actions에서 소스 코드를 체크아웃하는 액션
+
+      # 2. Amazon ECR에 로그인
+      - name: Log in to Amazon ECR
+        run: |
+          # AWS 자격 증명 설정
+          aws configure set aws_access_key_id ${{ secrets.AWS_ECR_IAM_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ECR_IAM_SECRET_ACCESS_KEY }}
+          # ECR에 로그인하여 Docker CLI로 ECR에 접근할 수 있도록 설정
+          aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+
+      # Docker 이미지 빌드 (OPENAI_API_KEY 전달)
+      - name: Build Docker image
+        run: docker build -t ai-service -f app/Dockerfile --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .
+
+      # 4. ECR에 푸시할 이미지 태그 지정
+      - name: Tag Docker image for ECR
+        run: docker tag ai-service:latest ${{ secrets.ECR_REGISTRY }}/ai-service:latest
+        # ECR에 푸시하기 위해 이미지에 ECR 리포지토리 URI로 태그 추가
+
+      # 5. ECR로 이미지 푸시
+      - name: Push to Amazon ECR
+        run: docker push ${{ secrets.ECR_REGISTRY }}/ai-service:latest
+        # 태그가 지정된 이미지를 Amazon ECR 리포지토리에 푸시
