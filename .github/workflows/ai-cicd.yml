@@ -1,4 +1,4 @@
-name: AI ECR Build and Push  # 워크플로 이름 정의
+name: AI ECR Build and Deploy to EC2  # 워크플로 이름 정의
 
 on:
   push:
@@ -37,12 +37,33 @@ jobs:
       - name: Push to Amazon ECR
         run: docker push ${{ secrets.ECR_REGISTRY }}:latest
         # 태그가 지정된 이미지를 Amazon ECR 리포지토리에 푸시
-        
-      # 6. 성공적인 이미지 푸시 후 디스코드 알림 전송
-      - name: Notify Discord
-        if: success()  # 이전 단계들이 성공했을 경우에만 실행
+
+      # 6. EC2에 SSH 연결하여 Docker 컨테이너 실행
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # ECR에서 최신 이미지 Pull
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            docker pull ${{ secrets.ECR_REGISTRY }}:latest
+            
+            # 기존 컨테이너 중지 및 삭제
+            if [ $(docker ps -q -f name=ai-service) ]; then
+                docker stop ai-service
+                docker rm ai-service
+            fi
+            
+            # 새로운 컨테이너 실행
+            docker run -d --name ai-service -p 8080:8080 ${{ secrets.ECR_REGISTRY }}:latest
+
+      # 7. 전체 작업 성공 시 최종 디스코드 알림 전송
+      - name: Notify Discord of Successful Deployment
+        if: success()  # 모든 단계가 성공한 경우에만 실행
         run: |
-          # Discord 웹훅을 통해 알림 전송
+          # Discord 웹훅을 통해 전체 과정 완료 알림 전송
           curl -H "Content-Type: application/json" \
-            -d '{"content": "ECR에 이미지가 성공적으로 푸시되었습니다!"}' \
+            -d '{"content": "CI/CD 작업이 성공적으로 완료되었습니다! Docker 이미지가 ECR에 푸시되고, EC2에서 컨테이너가 실행되었습니다."}' \
             https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
