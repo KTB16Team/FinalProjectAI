@@ -4,6 +4,12 @@ FROM python:3.12-slim
 # 작업 디렉토리 설정
 WORKDIR /app
 
+# 빌드 인수 정의
+ARG OPENAI_API_KEY
+
+# 환경 변수 설정
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+
 # requirements.txt 복사 및 종속성 설치
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
