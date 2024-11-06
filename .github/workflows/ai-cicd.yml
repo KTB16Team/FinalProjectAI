@@ -58,12 +58,13 @@ jobs:
             
             # 새로운 컨테이너 실행 (CloudWatch 로그 설정 추가)
             docker run -d -p 8080:8080 \
-              --name ai-service \
-              --log-driver=awslogs \
-              --log-opt awslogs-region=ap-northeast-2 \
-              --log-opt awslogs-group=AimoAI_LogsMonitoring \  # 생성된 CloudWatch 로그 그룹명
-              --log-opt awslogs-stream=AimoAI \       # 생성된 CloudWatch 로그 스트림명
-              ${{ secrets.ECR_REGISTRY }}:latest
+            --name ai-service \
+            --log-driver=awslogs \
+            --log-opt awslogs-region=ap-northeast-2 \
+            --log-opt awslogs-group=AimoAI_LogsMonitoring \
+            --log-opt awslogs-stream=ai-service-stream \
+            ${{ secrets.ECR_REGISTRY }}:latest
+
 
       # 7. 전체 작업 성공 시 최종 디스코드 알림 전송
       - name: Notify Discord of Successful Deployment
