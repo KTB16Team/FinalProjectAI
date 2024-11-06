@@ -34,10 +34,10 @@ jobs:
 
       # 4. ECR에 푸시할 이미지 태그 지정
       - name: Tag Docker image for ECR
-        run: docker tag ai-service:latest ${{ secrets.ECR_REGISTRY }}/ai-service:latest
+        run: docker tag ai-service:latest ${{ secrets.ECR_REGISTRY }}:latest
         # ECR에 푸시하기 위해 이미지에 ECR 리포지토리 URI로 태그 추가
 
       # 5. ECR로 이미지 푸시
       - name: Push to Amazon ECR
-        run: docker push ${{ secrets.ECR_REGISTRY }}/ai-service:latest
+        run: docker push ${{ secrets.ECR_REGISTRY }}:latest
         # 태그가 지정된 이미지를 Amazon ECR 리포지토리에 푸시
