@@ -40,7 +40,7 @@ async def get_voice(request: STTRequest):
 # 첫 번째 엔드포인트 /api/v1/ai/private-posts/judgement
 @router.post("/judgement", response_model=DataInfoSummary,status_code=201)
 async def process_judge(request: JudgeRequest):
-
+    logger.info(f"Received request data: {request.dict()}")
     logger.info("Starting judge processing")
     try:
         entities = test_response(request.content)
@@ -58,6 +58,7 @@ async def process_judge(request: JudgeRequest):
         faultRate=entities.get("fault_rate")
     )
     return response
+
 
 # async def read_user_info():
 #     query = text("SELECT user_info FROM user")
