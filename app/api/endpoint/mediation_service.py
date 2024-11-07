@@ -37,7 +37,7 @@ async def get_voice(request: STTRequest):
     logger.info(f"response : {response}")
     return response
 
-# 첫 번째 엔드포인트 /api/v1/ai/private-posts/judgement
+# 첫 번째 엔드포인트 /api/v1/private-posts/judgement
 @router.post("/judgement", response_model=DataInfoSummary,status_code=201)
 async def process_judge(request: JudgeRequest):
     logger.info(f"Received request data: {request.dict()}")
