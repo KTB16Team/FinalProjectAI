@@ -20,10 +20,10 @@ class VoiceInfo(BaseModel):
     data: Optional[Union[DataInfoSTT]]
 
 class JudgeRequest(BaseModel):
-    content: str = Field(..., description="대화록이 비었습니다.")
-    nickname: str = Field(..., description="유저명이 비었습니다.")
-    gender: str = Field(..., description="성별이 비었습니다.")
-    birth: date = Field(..., description="생년월일이 비었습니다.")
+    content: str 
+    nickname: str 
+    gender: str 
+    birth: date 
 
 class STTRequest(BaseModel):
     url: str
