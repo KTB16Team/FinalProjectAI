@@ -26,7 +26,9 @@ jobs:
 
       # Docker 이미지 빌드 (OPENAI_API_KEY 전달)
       - name: Build Docker image
-        run: docker build -t ai-service -f app/Dockerfile --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .
+        working-directory: app  # `app` 디렉터리에서 실행
+        run: docker build -t ai-service --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .
+
 
       # 4. ECR에 푸시할 이미지 태그 지정
       - name: Tag Docker image for ECR
@@ -38,7 +40,7 @@ jobs:
         run: docker push ${{ secrets.ECR_REGISTRY }}:latest
         # 태그가 지정된 이미지를 Amazon ECR 리포지토리에 푸시
 
-      # 6. EC2에 SSH 연결하여 Docker 컨테이너 실행
+      # 6. EC2에 SSH 연결하여 Docker 컨테이너 실행 및 헬스체크
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -57,14 +59,20 @@ jobs:
             fi
             
             # 새로운 컨테이너 실행 (CloudWatch 로그 설정 추가)
-            docker run -d -p 8080:8080 \
+            docker run -d -p 8080:8000 \
             --name ai-service \
             --log-driver=awslogs \
             --log-opt awslogs-region=ap-northeast-2 \
             --log-opt awslogs-group=AimoAI_LogsMonitoring \
             --log-opt awslogs-stream=AimoAI \
             ${{ secrets.ECR_REGISTRY }}:latest
-
+            
+            # 헬스체크 - 컨테이너가 실행 중인지 확인
+            sleep 10  # 컨테이너가 시작될 시간을 기다림
+            if [ $(docker inspect -f '{{.State.Running}}' ai-service) != "true" ]; then
+                echo "Error: Container failed to start."
+                exit 1
+            fi
 
       # 7. 전체 작업 성공 시 최종 디스코드 알림 전송
       - name: Notify Discord of Successful Deployment
