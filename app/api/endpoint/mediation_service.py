@@ -74,6 +74,7 @@ async def process_judge(request: JudgeRequest):
         judgement=entities.get("judgement"),
         faultRate=entities.get("fault_rate")
     )
+    logger.info("Finished judge processing")
     return response
 
 
