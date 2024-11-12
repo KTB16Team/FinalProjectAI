@@ -7,11 +7,12 @@ from datetime import datetime
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 import logging
+from services.emotion_behavior_situation import RelationshipAnalyzer
 # from app.services.emotion_behavior_situation import RelationshipAnalyzer
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
-# analyzer = RelationshipAnalyzer()
+analyzer = RelationshipAnalyzer()
 
 @router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
 async def get_voice(request: STTRequest):
@@ -55,10 +56,10 @@ async def process_judge(request: JudgeRequest):
         raise HTTPException(status_code=400, detail="CONTENT_NOT_PROVIDED")
 
     try:
-        entities = test_response(request.content)
-        # entities = situation_summary_GPT(request.content)
-        required_fields = ["title", "stance_plaintiff", "stance_defendant", "situation_summary", "judgement", "fault_rate"]
-        # required_fields = ["situation_summary", "judgement", "fault_ratios"]
+        # entities = test_response(request.content)
+        entities = await situation_summary_GPT(request.content)
+        # required_fields = ["title", "stance_plaintiff", "stance_defendant", "situation_summary", "judgement", "fault_rate"]
+        required_fields = ["situation_summary", "judgement", "fault_ratios"]
         # missing_fields = [field for field in required_fields if field not in entities]
         missing_fields = [field for field in required_fields if field not in entities]
         if missing_fields:
@@ -71,25 +72,25 @@ async def process_judge(request: JudgeRequest):
         logger.error(f"General error during GPT processing: {e}")
         raise HTTPException(status_code=500, detail="GPT_PROCESSING_ERROR")
 
-    # response = DataInfoSummary(
-    #     title=entities["situation_summary"]["title"],
-    #     stancePlaintiff=entities["judgement"]["A_position"],
-    #     stanceDefendant=entities["judgement"]["B_position"],
-    #     summaryAi=entities["situation_summary"]["situation_summary"],
-    #     judgement=entities["judgement"]["conclusion"],
-    #     faultRate=f"A: {entities['fault_ratios']['A']*100:.2f}%, B: {entities['fault_ratios']['B']*100:.2f}%"
-    #     )
-    
     response = DataInfoSummary(
-        title=entities.get("title"),
-        stancePlaintiff=entities.get("stance_plaintiff"),
-        stanceDefendant=entities.get("stance_defendant"),
-        summaryAi=entities.get("situation_summary"),
-        judgement=entities.get("judgement"),
-        faultRate=entities.get("fault_rate")
-    )
+        title=entities["situation_summary"]["title"],
+        stancePlaintiff=entities["judgement"]["A_position"],
+        stanceDefendant=entities["judgement"]["B_position"],
+        summaryAi=entities["situation_summary"]["situation_summary"],
+        judgement=entities["judgement"]["conclusion"],
+        faultRate=f"A: {entities['fault_ratios']['A']*100:.2f}%, B: {entities['fault_ratios']['B']*100:.2f}%"
+        )
+    
+    # response = DataInfoSummary(
+    #     title=entities.get("title"),
+    #     stancePlaintiff=entities.get("stance_plaintiff"),
+    #     stanceDefendant=entities.get("stance_defendant"),
+    #     summaryAi=entities.get("situation_summary"),
+    #     judgement=entities.get("judgement"),
+    #     faultRate=entities.get("fault_rate")
+    # )
     logger.info("Finished judge processing")
-    # logger.info(f"판결 응답: {response}")
+    logger.info(f"판결 응답: {response}")
     return response
 
 
