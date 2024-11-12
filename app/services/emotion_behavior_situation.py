@@ -475,7 +475,7 @@ class RelationshipAnalyzer:
           "situation_summary": situation_results.dict(),
           "stance_actions": [action.dict() for action in stance_results],
           "emotional_analysis": emotional_results.dict() if emotional_results else None,
-          "fault_ratios": fault_ratios,
+          "fault_ratios": float(fault_ratios),
           "judgement": judgement,
           "analysis_timestamp": datetime.now().isoformat()
       }
