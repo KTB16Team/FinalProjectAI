@@ -468,6 +468,7 @@ class RelationshipAnalyzer:
       stance_results = await self.analyze_stance_changes(dialogue_lines, situation_results)
       emotional_results = await self.analyze_emotional_impact(dialogue_lines, stance_results)
       fault_ratios = await self.calculate_fault_ratio(situation_results, stance_results, emotional_results)
+      a_fault_ratio = fault_ratios["A"]
       judgement = await self.generate_judgment_statement(situation_results, fault_ratios, stance_results)
       # Pydantic 모델을 딕셔너리로 변환
       return {
@@ -475,7 +476,7 @@ class RelationshipAnalyzer:
           "situation_summary": situation_results.dict(),
           "stance_actions": [action.dict() for action in stance_results],
           "emotional_analysis": emotional_results.dict() if emotional_results else None,
-          "fault_ratios": float(fault_ratios),
+          "fault_ratios": a_fault_ratio,
           "judgement": judgement,
           "analysis_timestamp": datetime.now().isoformat()
       }
