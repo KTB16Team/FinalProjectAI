@@ -78,7 +78,7 @@ async def process_judge(request: JudgeRequest):
         stanceDefendant=entities["judgement"]["B_position"],
         summaryAi=entities["situation_summary"]["situation_summary"],
         judgement=entities["judgement"]["conclusion"],
-        faultRate=f"A: {entities['fault_ratios']['A']*100:.2f}%, B: {entities['fault_ratios']['B']*100:.2f}%"
+        faultRate = f"{entities['fault_ratios']['A'] * 100:.2f}"
         )
     
     # response = DataInfoSummary(

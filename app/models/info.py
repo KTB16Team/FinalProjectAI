@@ -12,7 +12,7 @@ class DataInfoSummary(BaseModel):
     stanceDefendant: Optional[str]
     summaryAi: Optional[str]
     judgement: Optional[str]
-    faultRate: Optional[Union[float, int, str]]
+    faultRate: Optional[float]
 
 class VoiceInfo(BaseModel):
     status: Optional[str]
