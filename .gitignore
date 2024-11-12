@@ -1,3 +1,14 @@
-
+# IntelliJ IDEA specific files
 .idea/vcs.xml
 .idea/workspace.xml
+
+# Python virtual environment
+/venv
+
+# Cache files
+**/__pycache__/
+**/*.py[cod]
+
+# Environment variables
+app/.env
+.vscode/settings.json

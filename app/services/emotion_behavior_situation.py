@@ -480,89 +480,89 @@ class RelationshipAnalyzer:
           "analysis_timestamp": datetime.now().isoformat()
       }
   
-async def test_analysis():
-    start_time = time.time()
-    test_data = """
-      A: 당신 때문에 정말 화가나요! 약속 시간도 지키지 않고, 연락도 없고...
-      B: 죄송해요... 제가 일이 좀 바빠서...
-      A: 그 말도 벌써 세 번째예요. 이제는 믿기 힘들어요.
-      B: 아니, 이번엔 정말 급한 일이 있었어요! 다음부터는 꼭 시간 맞출게요.
-      A: 늘 그렇게만 말하고 바뀌는 건 없네요. 이제 지쳤어요.
-    """
+# async def test_analysis():
+#     start_time = time.time()
+#     test_data = """
+#       A: 당신 때문에 정말 화가나요! 약속 시간도 지키지 않고, 연락도 없고...
+#       B: 죄송해요... 제가 일이 좀 바빠서...
+#       A: 그 말도 벌써 세 번째예요. 이제는 믿기 힘들어요.
+#       B: 아니, 이번엔 정말 급한 일이 있었어요! 다음부터는 꼭 시간 맞출게요.
+#       A: 늘 그렇게만 말하고 바뀌는 건 없네요. 이제 지쳤어요.
+#     """
 
-    analyzer = RelationshipAnalyzer()
+#     analyzer = RelationshipAnalyzer()
     
-    try:
-        print("분석 시작...")
-        result = await analyzer.analyze(test_data)
+#     try:
+#         print("분석 시작...")
+#         result = analyzer.analyze(test_data)
 
-        print("\n대화 라인:")
-        for line in result["dialogue_lines"]:
-            print(f"{line['index']}. {line['speaker']}: {line['text']}")
+#         print("\n대화 라인:")
+#         for line in result["dialogue_lines"]:
+#             print(f"{line['index']}. {line['speaker']}: {line['text']}")
         
-        print("\n제목:")
-        print(result["situation_summary"]["title"])
+#         print("\n제목:")
+#         print(result["situation_summary"]["title"])
 
-        situation_summary = result["situation_summary"]
-        print("\n상황 요약:")
-        print(f"{situation_summary['situation_summary']}")
+#         situation_summary = result["situation_summary"]
+#         print("\n상황 요약:")
+#         print(f"{situation_summary['situation_summary']}")
         
-        print("\n상황 케이스들:")
-        for case in situation_summary["cases"]:
-            print(f"- 이벤트: {case['event']}")
-            print(f"  참여자: {case['participants']}")
-            print(f"  결과: {case['result']}")
-            print(f"  시간 프레임: {case['time_frame']}")
-            print(f"  상황 점수: {case['score']}\n")
+#         print("\n상황 케이스들:")
+#         for case in situation_summary["cases"]:
+#             print(f"- 이벤트: {case['event']}")
+#             print(f"  참여자: {case['participants']}")
+#             print(f"  결과: {case['result']}")
+#             print(f"  시간 프레임: {case['time_frame']}")
+#             print(f"  상황 점수: {case['score']}\n")
 
-        print("\n스탠스 변화 지점:")
-        for action in result["stance_actions"]:
-            print(f"\n액션 인덱스 {action['index']}:")
-            print(f"액션 내용: {action['dialogue_text']}")
-            print(f"변화 주체: {action['party']}")
-            print(f"태도 분류: {action['stance_classification']}")
-            print(f"행동 평가 점수: {action['score']}")
+#         print("\n스탠스 변화 지점:")
+#         for action in result["stance_actions"]:
+#             print(f"\n액션 인덱스 {action['index']}:")
+#             print(f"액션 내용: {action['dialogue_text']}")
+#             print(f"변화 주체: {action['party']}")
+#             print(f"태도 분류: {action['stance_classification']}")
+#             print(f"행동 평가 점수: {action['score']}")
         
-        print("\n감정 영향 분석:")
-        emotional = result["emotional_analysis"]
+#         print("\n감정 영향 분석:")
+#         emotional = result["emotional_analysis"]
         
-        print("\nA가 B에게 미친 영향:")
-        a_to_b = emotional["a_to_b_impact"]
-        print(f"영향 점수: {a_to_b['impact_score']}")
-        print(f"감정 상태: {', '.join(a_to_b['emotional_state'])}")
-        print(f"영향 설명: {a_to_b['impact_description']}")
-        print(f"관련 대화 인덱스: {a_to_b['relevant_dialogue_indices']}")
+#         print("\nA가 B에게 미친 영향:")
+#         a_to_b = emotional["a_to_b_impact"]
+#         print(f"영향 점수: {a_to_b['impact_score']}")
+#         print(f"감정 상태: {', '.join(a_to_b['emotional_state'])}")
+#         print(f"영향 설명: {a_to_b['impact_description']}")
+#         print(f"관련 대화 인덱스: {a_to_b['relevant_dialogue_indices']}")
         
-        print("\nB가 A에게 미친 영향:")
-        b_to_a = emotional["b_to_a_impact"]
-        print(f"영향 점수: {b_to_a['impact_score']}")
-        print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
-        print(f"영향 설명: b_to_a['impact_description']")
-        print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
+#         print("\nB가 A에게 미친 영향:")
+#         b_to_a = emotional["b_to_a_impact"]
+#         print(f"영향 점수: {b_to_a['impact_score']}")
+#         print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
+#         print(f"영향 설명: b_to_a['impact_description']")
+#         print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
 
-        print("\n과실 비율:")
-        print(f"A의 과실 비율: {result['fault_ratios']['A'] * 100:.2f}%")
-        print(f"B의 과실 비율: {result['fault_ratios']['B'] * 100:.2f}%")
+#         print("\n과실 비율:")
+#         print(f"A의 과실 비율: {result['fault_ratios']['A'] * 100:.2f}%")
+#         print(f"B의 과실 비율: {result['fault_ratios']['B'] * 100:.2f}%")
 
-        print("\n판결문:")
-        print("\nA의 입장:")
-        print(result["judgement"]["A_position"])
+#         print("\n판결문:")
+#         print("\nA의 입장:")
+#         print(result["judgement"]["A_position"])
 
-        print("\nB의 입장:")
-        print(result["judgement"]["B_position"])
+#         print("\nB의 입장:")
+#         print(result["judgement"]["B_position"])
 
-        print("\n결론:")
-        print(result["judgement"]["conclusion"])
+#         print("\n결론:")
+#         print(result["judgement"]["conclusion"])
 
-        end_time = time.time()
+#         end_time = time.time()
 
-        # 소요 시간 계산
-        elapsed_time = end_time - start_time
-        print(f"Elapsed time: {elapsed_time} seconds")
+#         # 소요 시간 계산
+#         elapsed_time = end_time - start_time
+#         print(f"Elapsed time: {elapsed_time} seconds")
 
-    except Exception as e:
-        print(f"에러 발생: {str(e)}")
-        raise
+#     except Exception as e:
+#         print(f"에러 발생: {str(e)}")
+#         raise
 
-if __name__ == "__main__":
-    asyncio.run(test_analysis())
+# if __name__ == "__main__":
+#     asyncio.run(test_analysis())
