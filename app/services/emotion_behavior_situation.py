@@ -148,7 +148,7 @@ class RelationshipAnalyzer:
                 response_text = response_text[:-3]
             
             result = json.loads(response_text)
-            print("summarize_and_evaluate_situation result:", result) 
+            # print("summarize_and_evaluate_situation result:", result) 
             # title = result.get("title", "Untitled")
             # print(result) 
             cases = [SituationCase(**case) for case in result.get("situation_cases", [])]
