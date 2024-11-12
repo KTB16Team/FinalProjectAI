@@ -7,7 +7,7 @@ from datetime import datetime
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 import logging
-from app.services.emotion_behavior_situation import RelationshipAnalyzer
+from services.emotion_behavior_situation import RelationshipAnalyzer
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
