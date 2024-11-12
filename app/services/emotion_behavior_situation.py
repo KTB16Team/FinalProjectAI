@@ -127,7 +127,6 @@ class RelationshipAnalyzer:
             ...
         ]
     }}
-        Include only clear stance changes - not every dialogue line will represent a change point.
         Return strictly JSON output only. No explanation, no additional text.
         Please print in Korean.
         
@@ -317,7 +316,7 @@ class RelationshipAnalyzer:
               "impact_description": "detailed description",
               "relevant_dialogue_indices": [indices]
             }},
-            a_to_b_impact:
+            b_to_a_impact:
             {{
               "from_party": "B",
               "to_party": "A",
@@ -368,11 +367,11 @@ class RelationshipAnalyzer:
         situation_score = sum(case.score for case in situation_results.cases) / len(situation_results.cases) if situation_results.cases else 1.0
         behavior_score = sum(action.score for action in stance_results) / len(stance_results) if stance_results else 1.0
         
-        emotion_score_a_to_b = max(0.01, (1 - emotional_analysis.a_to_b_impact.impact_score))
-        emotion_score_b_to_a = max(0.01, (1 - emotional_analysis.b_to_a_impact.impact_score))
+        emotion_score_a_to_b = max(0.01, emotional_analysis.a_to_b_impact.impact_score)
+        emotion_score_b_to_a = max(0.01, emotional_analysis.b_to_a_impact.impact_score)
         
-        fault_score_a = situation_score * behavior_score * emotion_score_a_to_b
-        fault_score_b = situation_score * behavior_score * emotion_score_b_to_a
+        fault_score_a = (situation_score * behavior_score) / emotion_score_a_to_b
+        fault_score_b = (situation_score * behavior_score) / emotion_score_b_to_a
 
         total_score = fault_score_a + fault_score_b
         fault_ratio_a = fault_score_a / total_score
