@@ -20,10 +20,10 @@ class VoiceInfo(BaseModel):
     data: Optional[Union[DataInfoSTT]]
 
 class JudgeRequest(BaseModel):
-    content: str
-    nickname: str
-    gender: str
-    birth: date
+    content: str 
+    nickname: str 
+    gender: str 
+    birth: date 
 
 class STTRequest(BaseModel):
     url: str
