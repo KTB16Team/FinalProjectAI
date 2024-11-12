@@ -66,8 +66,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-              docker stop ai-service
-              docker rm ai-service
+            if [ $(docker ps -q -f name=ai-service) ]; then
+                docker stop ai-service
+                docker rm ai-service
+            fi
 
       # 3. 새로운 컨테이너 실행 (CloudWatch 로그 설정 추가)
       - name: Run New Docker Container
