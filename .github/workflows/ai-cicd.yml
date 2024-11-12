@@ -1,4 +1,4 @@
-name: AI ECR Build and Push  # 워크플로 이름 정의
+name: AI ECR Build and Deploy to EC2  # 워크플로 이름 정의
 
 on:
   push:
@@ -26,7 +26,8 @@ jobs:
 
       # Docker 이미지 빌드 (OPENAI_API_KEY 전달)
       - name: Build Docker image
-        run: docker build -t ai-service -f app/Dockerfile --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .
+        working-directory: app  # `app` 디렉터리에서 실행
+        run: docker build -t ai-service --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .
 
       # 4. ECR에 푸시할 이미지 태그 지정
       - name: Tag Docker image for ECR
@@ -37,12 +38,79 @@ jobs:
       - name: Push to Amazon ECR
         run: docker push ${{ secrets.ECR_REGISTRY }}:latest
         # 태그가 지정된 이미지를 Amazon ECR 리포지토리에 푸시
-        
-      # 6. 성공적인 이미지 푸시 후 디스코드 알림 전송
-      - name: Notify Discord
-        if: success()  # 이전 단계들이 성공했을 경우에만 실행
+
+  deploy-to-ec2:
+    runs-on: ubuntu-latest
+    needs: build-and-push  # 이전 build-and-push 작업이 완료되어야 실행
+
+    steps:
+      # 1. EC2에 SSH 연결하여 Docker 환경 설정 및 이미지 관리
+      - name: Connect to EC2 and Setup Docker
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 도커 이미지 삭제
+            docker image prune -a -f
+            # ECR에서 최신 이미지 Pull
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            docker pull ${{ secrets.ECR_REGISTRY }}:latest
+
+      # 2. 기존 컨테이너 중지 및 삭제
+      - name: Stop and Remove Existing Container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            if [ $(docker ps -q -f name=ai-service) ]; then
+                docker stop ai-service
+                docker rm ai-service
+            fi
+
+      # 3. 새로운 컨테이너 실행 (CloudWatch 로그 설정 추가)
+      - name: Run New Docker Container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker run -d -p 8000:8000 \
+            --name ai-service \
+            --log-driver=awslogs \
+            --log-opt awslogs-region=ap-northeast-2 \
+            --log-opt awslogs-group=AimoAI_LogsMonitoring \
+            --log-opt awslogs-stream=AimoAI \
+            ${{ secrets.ECR_REGISTRY }}:latest
+
+      # 4. 헬스체크 - 컨테이너가 실행 중인지 확인
+      - name: Health Check Container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sleep 10  # 컨테이너가 시작될 시간을 기다림
+            if [ $(docker inspect -f '{{.State.Running}}' ai-service) != "true" ]; then
+                echo "Error: Container failed to start."
+                exit 1
+            fi
+
+  notify-discord:
+    runs-on: ubuntu-latest
+    needs: deploy-to-ec2
+
+    steps:
+      # 1. 전체 작업 성공 시 최종 디스코드 알림 전송
+      - name: Notify Discord of Successful Deployment
+        if: success()  # 모든 단계가 성공한 경우에만 실행
         run: |
-          # Discord 웹훅을 통해 알림 전송
+          # Discord 웹훅을 통해 전체 과정 완료 알림 전송
           curl -H "Content-Type: application/json" \
-            -d '{"content": "ECR에 이미지가 성공적으로 푸시되었습니다!"}' \
+            -d '{"content": "CI/CD 작업이 성공적으로 완료되었습니다! Docker 이미지가 ECR에 푸시되고, EC2에서 컨테이너가 실행되었습니다."}' \
             https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
