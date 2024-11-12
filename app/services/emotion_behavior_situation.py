@@ -478,7 +478,6 @@ class RelationshipAnalyzer:
           "fault_ratios": fault_ratios,
           "judgement": judgement,
           "analysis_timestamp": datetime.now().isoformat()
-
       }
   
 async def test_analysis():
