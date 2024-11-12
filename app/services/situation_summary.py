@@ -21,7 +21,7 @@ from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 import openai
 import asyncio
-from emotion_behavior_situation import RelationshipAnalyzer
+from services.emotion_behavior_situation import RelationshipAnalyzer
 #%%
 # OPENAI_API_KEY
 load_dotenv()
