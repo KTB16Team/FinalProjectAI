@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Optional
 import os
 from datetime import datetime
 from langchain.prompts import ChatPromptTemplate
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 import time
@@ -59,16 +59,62 @@ class RelationshipAnalyzer:
     def __init__(self):
         self.llm = ChatOpenAI(
             temperature=0.2, #어느정도로 할건지?
-            model="gpt-4o", 
+            model="gpt-4o-mini", 
             api_key=os.getenv('OPENAI_API_KEY')
         )
         self.parser = PydanticOutputParser(pydantic_object=AnalysisResult)
+    async def convert_narrative_to_dialogue(self, text: str) -> Dict:
+        """
+        **고친 부분 1: 서술형 텍스트를 대화형 텍스트로 변환**
+        Convert narrative text to dialogue and identify participants' sides.
+        """
+        prompt_template = """
+        Given the following narrative text, convert it into dialogue format and classify the participants into A and B sides.
+        
+        Narrative Text:
+        {text}
+
+        1. Convert the text into a dialogue format.
+        2. Classify the participants into two main groups (A and B).
+        3. If there are additional participants, assign them to either group A or B based on their alignment with the main argument.
+
+        Return a JSON format:
+        {{
+          "dialogue": [
+            {{"speaker": "A", "text": "dialogue line"}},
+            {{"speaker": "B", "text": "dialogue line"}},
+            ...
+          ],
+          "groups": {{
+            "group_A": ["participant1", "participant2"],
+            "group_B": ["participant3", "participant4"]
+          }}
+        }}
+        """
+
+        prompt = ChatPromptTemplate.from_template(template=prompt_template)
+
+        try:
+            response = await self.llm.agenerate([
+                prompt.format_messages(text=text)
+            ])
+            response_text = response.generations[0][0].text.strip()
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            return json.loads(response_text)
+        except Exception as e:
+            print(f"Error converting narrative to dialogue: {str(e)}")
+            raise
 
     def parse_dialogue(self, text: str) -> List[DialogueLine]:
-        """원본 텍스트를 인덱스가 있는 대화 라인으로 파싱"""
+        """
+        **고친 부분 2: 대화형 텍스트를 그대로 처리**
+        Parse dialogue text into DialogueLine objects.
+        """
         lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
         dialogue_lines = []
-        
         for idx, line in enumerate(lines, 1):
             if ':' in line:
                 speaker, content = line.split(':', 1)
@@ -77,8 +123,8 @@ class RelationshipAnalyzer:
                     speaker=speaker.strip(),
                     text=content.strip()
                 ))
-        
         return dialogue_lines
+
 #어떤 사람이 변화를 보여줬는지 party를 추출하는 것도 의미가 있을지?
 
     async def summarize_and_evaluate_situation(self, dialogue_lines: List[DialogueLine]) -> SituationSummary:
@@ -94,7 +140,7 @@ class RelationshipAnalyzer:
         - Provide an objective and neutral summary.
         
         2. title:
-        - Generate a single-line title that is intriguing and captivating.
+        - Generate a single-line title that is intriguing and captivating without name.
         - Make sure the title arouses curiosity and is slightly provocative to attract readers.
         - Ensure the title is directly related to the situation and sounds dramatic or unexpected.
 
@@ -375,14 +421,11 @@ class RelationshipAnalyzer:
 
         total_score = fault_score_a + fault_score_b
         fault_ratio_a = fault_score_a / total_score
-        fault_ratio_b = fault_score_b / total_score
+        # fault_ratio_b = fault_score_b / total_score
         
-        return {
-            "A": round(fault_ratio_a, 2),
-            "B": round(fault_ratio_b, 2)
-        }
+        return round(fault_ratio_a, 2)
     
-    async def generate_judgment_statement(self, situation_results: SituationSummary, fault_ratios: Dict[str, float], stance_results: List[StanceAction]) -> str:
+    async def generate_judgement_statement(self, situation_results: SituationSummary, fault_ratios: Dict[str, float], stance_results: List[StanceAction]) -> str:
         prompt_template = """
         You are an impartial arbitrator delivering a final judgment in a dispute. Given the following details:
 
@@ -399,13 +442,13 @@ class RelationshipAnalyzer:
         Behavioral Changes:
         {stance_changes}
 
-        Based on the above data, deliver a final judgment statement that:
-        1. Separately summarize the perspectives of both A and B based on the provided summaries.
-        2. Clearly outline the culpability percentages and explain the reasoning behind them.
-        3. Concludes with an objective final statement on the overall fault distribution and provides a resolution or advice.
-            - In the conclusion section, do not include any mention of fault ratios or advice.
-            - Focus only on offering advice, constructive feedback, or actionable recommendations for conflict resolution without referencing any quantitative assessment of fault.
-            - Speak as a caring counselor might, encouraging reflection, open communication, and mutual empathy to foster a path toward resolution.
+        Based on this data:
+        1. Provide a detailed summary of A's perspective, including their emotional stance, key arguments, and any constructive or destructive behaviors observed.
+        2. Provide a detailed summary of B's perspective, similarly outlining their emotions, key points, and actions.
+        3. Deliver a concluding statement with empathetic advice:
+            - Avoid mentioning fault ratios explicitly in this section.
+            - Focus on offering practical, warm, and supportive advice for improving communication and resolving the conflict.
+            - Use a friendly tone, similar to that of a compassionate counselor, to provide actionable steps for building mutual understanding and harmony.
         4. Please print in Korean.
 
         Return only the following JSON format without any additional text:
@@ -415,8 +458,10 @@ class RelationshipAnalyzer:
         "conclusion": "Detailed advice or final resolution statement without fault distribution"
         }}
 
-        Take a deep breath and step by step.
+        Ensure the conclusion feels warm, encouraging, and emotionally supportive. Do not be judgmental. Take a deep breath and step by step.
         """
+        a_fault_ratio = fault_ratios
+        b_fault_ratio = 1 - fault_ratios
 
         situation_summary_text = situation_results.situation_summary
         situation_cases_text = "\n".join([
@@ -436,8 +481,8 @@ class RelationshipAnalyzer:
                 prompt.format_messages(
                     situation_summary=situation_summary_text,
                     situation_cases=situation_cases_text,
-                    a_fault_ratio=fault_ratios["A"],
-                    b_fault_ratio=fault_ratios["B"],
+                    a_fault_ratio=a_fault_ratio * 100,
+                    b_fault_ratio=b_fault_ratio * 100,
                     stance_changes=stance_changes_text
                 )
             ])
@@ -461,109 +506,118 @@ class RelationshipAnalyzer:
 
 
     async def analyze(self, text: str) -> Dict:
-      from datetime import datetime
 
-      dialogue_lines = self.parse_dialogue(text)
-      situation_results = await self.summarize_and_evaluate_situation(dialogue_lines)#추가
-      stance_results = await self.analyze_stance_changes(dialogue_lines, situation_results)
-      emotional_results = await self.analyze_emotional_impact(dialogue_lines, stance_results)
-      fault_ratios = await self.calculate_fault_ratio(situation_results, stance_results, emotional_results)
-      a_fault_ratio = fault_ratios["A"]
-      judgement = await self.generate_judgment_statement(situation_results, fault_ratios, stance_results)
-      # Pydantic 모델을 딕셔너리로 변환
-      return {
-          "dialogue_lines": [line.dict() for line in dialogue_lines],
-          "situation_summary": situation_results.dict(),
-          "stance_actions": [action.dict() for action in stance_results],
-          "emotional_analysis": emotional_results.dict() if emotional_results else None,
-          "fault_ratios": a_fault_ratio,
-          "judgement": judgement,
-          "analysis_timestamp": datetime.now().isoformat()
-      }
+        from datetime import datetime
+
+        # 서술형 텍스트인지 대화형 텍스트인지 확인
+        if ':' not in text:  # 서술형 텍스트 처리
+            conversion_result = await self.convert_narrative_to_dialogue(text)
+            dialogue_data = conversion_result["dialogue"]
+            participant_groups = conversion_result["groups"]
+            # DialogueLine 객체로 변환
+            dialogue_lines = [
+                DialogueLine(index=i + 1, speaker=line["speaker"], text=line["text"])
+                for i, line in enumerate(dialogue_data)
+            ]
+        else:
+            dialogue_lines = self.parse_dialogue(text)
+            participant_groups = None
+
+        situation_results = await self.summarize_and_evaluate_situation(dialogue_lines)
+        stance_results = await self.analyze_stance_changes(dialogue_lines, situation_results)
+        emotional_results = await self.analyze_emotional_impact(dialogue_lines, stance_results)
+        fault_ratios = await self.calculate_fault_ratio(situation_results, stance_results, emotional_results)
+        judgement = await self.generate_judgement_statement(situation_results=situation_results, fault_ratios=fault_ratios, stance_results=stance_results)
+
+        return {
+            "dialogue_lines": [line.dict() for line in dialogue_lines],
+            "participant_groups": participant_groups,
+            "situation_summary": situation_results.dict(),
+            "stance_actions": [action.dict() for action in stance_results],
+            "emotional_analysis": emotional_results.dict(),
+            "fault_ratios": fault_ratios,
+            "judgement": judgement,
+            "analysis_timestamp": datetime.now().isoformat()
+        }
   
-# async def test_analysis():
-#     start_time = time.time()
-#     test_data = """
-#       A: 당신 때문에 정말 화가나요! 약속 시간도 지키지 않고, 연락도 없고...
-#       B: 죄송해요... 제가 일이 좀 바빠서...
-#       A: 그 말도 벌써 세 번째예요. 이제는 믿기 힘들어요.
-#       B: 아니, 이번엔 정말 급한 일이 있었어요! 다음부터는 꼭 시간 맞출게요.
-#       A: 늘 그렇게만 말하고 바뀌는 건 없네요. 이제 지쳤어요.
-#     """
+async def test_analysis():
+    start_time = time.time()
+    test_data = """
+    민수가 팀프로젝트 발표 중에 PPT가 안 넘어가자 화를 냈어. 지원이랑 영호는 민수를 진정시키려 했는데, 서연이는 오히려 민수한테 '네가 미리 점검했어야지'라면서 불편한 말을 했어.
+    """
 
-#     analyzer = RelationshipAnalyzer()
+    analyzer = RelationshipAnalyzer()
     
-#     try:
-#         print("분석 시작...")
-#         result = analyzer.analyze(test_data)
+    try:
+        print("분석 시작...")
+        result = await analyzer.analyze(test_data)
 
-#         print("\n대화 라인:")
-#         for line in result["dialogue_lines"]:
-#             print(f"{line['index']}. {line['speaker']}: {line['text']}")
+        print("\n대화 라인:")
+        for line in result["dialogue_lines"]:
+            print(f"{line['index']}. {line['speaker']}: {line['text']}")
         
-#         print("\n제목:")
-#         print(result["situation_summary"]["title"])
+        print("\n제목:")
+        print(result["situation_summary"]["title"])
 
-#         situation_summary = result["situation_summary"]
-#         print("\n상황 요약:")
-#         print(f"{situation_summary['situation_summary']}")
+        situation_summary = result["situation_summary"]
+        print("\n상황 요약:")
+        print(f"{situation_summary['situation_summary']}")
         
-#         print("\n상황 케이스들:")
-#         for case in situation_summary["cases"]:
-#             print(f"- 이벤트: {case['event']}")
-#             print(f"  참여자: {case['participants']}")
-#             print(f"  결과: {case['result']}")
-#             print(f"  시간 프레임: {case['time_frame']}")
-#             print(f"  상황 점수: {case['score']}\n")
+        print("\n상황 케이스들:")
+        for case in situation_summary["cases"]:
+            print(f"- 이벤트: {case['event']}")
+            print(f"  참여자: {case['participants']}")
+            print(f"  결과: {case['result']}")
+            print(f"  시간 프레임: {case['time_frame']}")
+            print(f"  상황 점수: {case['score']}\n")
 
-#         print("\n스탠스 변화 지점:")
-#         for action in result["stance_actions"]:
-#             print(f"\n액션 인덱스 {action['index']}:")
-#             print(f"액션 내용: {action['dialogue_text']}")
-#             print(f"변화 주체: {action['party']}")
-#             print(f"태도 분류: {action['stance_classification']}")
-#             print(f"행동 평가 점수: {action['score']}")
+        print("\n스탠스 변화 지점:")
+        for action in result["stance_actions"]:
+            print(f"\n액션 인덱스 {action['index']}:")
+            print(f"액션 내용: {action['dialogue_text']}")
+            print(f"변화 주체: {action['party']}")
+            print(f"태도 분류: {action['stance_classification']}")
+            print(f"행동 평가 점수: {action['score']}")
         
-#         print("\n감정 영향 분석:")
-#         emotional = result["emotional_analysis"]
+        print("\n감정 영향 분석:")
+        emotional = result["emotional_analysis"]
         
-#         print("\nA가 B에게 미친 영향:")
-#         a_to_b = emotional["a_to_b_impact"]
-#         print(f"영향 점수: {a_to_b['impact_score']}")
-#         print(f"감정 상태: {', '.join(a_to_b['emotional_state'])}")
-#         print(f"영향 설명: {a_to_b['impact_description']}")
-#         print(f"관련 대화 인덱스: {a_to_b['relevant_dialogue_indices']}")
+        print("\nA가 B에게 미친 영향:")
+        a_to_b = emotional["a_to_b_impact"]
+        print(f"영향 점수: {a_to_b['impact_score']}")
+        print(f"감정 상태: {', '.join(a_to_b['emotional_state'])}")
+        print(f"영향 설명: {a_to_b['impact_description']}")
+        print(f"관련 대화 인덱스: {a_to_b['relevant_dialogue_indices']}")
         
-#         print("\nB가 A에게 미친 영향:")
-#         b_to_a = emotional["b_to_a_impact"]
-#         print(f"영향 점수: {b_to_a['impact_score']}")
-#         print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
-#         print(f"영향 설명: b_to_a['impact_description']")
-#         print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
+        print("\nB가 A에게 미친 영향:")
+        b_to_a = emotional["b_to_a_impact"]
+        print(f"영향 점수: {b_to_a['impact_score']}")
+        print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
+        print(f"영향 설명: b_to_a['impact_description']")
+        print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
 
-#         print("\n과실 비율:")
-#         print(f"A의 과실 비율: {result['fault_ratios']['A'] * 100:.2f}%")
-#         print(f"B의 과실 비율: {result['fault_ratios']['B'] * 100:.2f}%")
+        print("\n과실 비율:")
+        print(f"A의 과실 비율: {result['fault_ratios'] * 100:.2f}%")
 
-#         print("\n판결문:")
-#         print("\nA의 입장:")
-#         print(result["judgement"]["A_position"])
+        print("\n판결문:")
+        print("\nA측 입장:")
+        print(result["judgement"]["A_position"])
 
-#         print("\nB의 입장:")
-#         print(result["judgement"]["B_position"])
+        print("\nB측 입장:")
+        print(result["judgement"]["B_position"])
 
-#         print("\n결론:")
-#         print(result["judgement"]["conclusion"])
+        print("\n결론:")
+        print(result["judgement"]["conclusion"])
 
-#         end_time = time.time()
+        end_time = time.time()
 
-#         # 소요 시간 계산
-#         elapsed_time = end_time - start_time
-#         print(f"Elapsed time: {elapsed_time} seconds")
+        # 소요 시간 계산
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time: {elapsed_time} seconds")
 
-#     except Exception as e:
-#         print(f"에러 발생: {str(e)}")
-#         raise
+    except Exception as e:
+        print(f"에러 발생: {str(e)}")
+        raise
 
-# if __name__ == "__main__":
-#     asyncio.run(test_analysis())
+if __name__ == "__main__":
+    asyncio.run(test_analysis())
