@@ -68,8 +68,8 @@ jobs:
           script: |
             # 기존 컨테이너가 실행 중인지 확인
             if [ $(docker ps -q -f name=ai-service) ]; then
-                docker stop ai-service  # 컨테이너 정지
-                docker rm ai-service    # 컨테이너 삭제
+                docker stop ai-service || true # 컨테이너 정지
+                docker rm ai-service || true # 컨테이너 삭제
             fi
 
       # 3. 새로운 Docker 컨테이너 실행
@@ -104,32 +104,21 @@ jobs:
                 exit 1
             fi
 
-  # 성공 알림 작업
-  notify-success:
+  # 알림 작업 (성공 및 실패 모두 처리)
+  notify:
     runs-on: ubuntu-latest  # 최신 우분투 환경에서 실행
-    needs: deploy-to-ec2  # deploy-to-ec2 작업이 완료되어야 실행 가능
+    needs: [build-and-push, deploy-to-ec2]  # 두 작업 완료 후 실행
 
     steps:
-      # 성공 시 Discord 알림 전송
-      - name: Notify Discord of Successful Deployment
-        if: success()  # 성공했을 경우에만 실행
+      # 성공 및 실패 여부에 따라 Discord 알림 전송
+      - name: Notify Discord of Build and Deployment Result
+        if: always()  # 작업 성공/실패 여부와 관계없이 실행
         run: |
-          # Discord 웹훅을 통해 성공 알림 전송
-          curl -H "Content-Type: application/json" \
-            -d '{"content": "✅ CI/CD 완료! : Docker 이미지 ECR 푸시 + 컨테이너 실행완."}' \
-            https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
-
-  # 실패 알림 작업
-  notify-failure:
-    runs-on: ubuntu-latest  # 최신 우분투 환경에서 실행
-    needs: [build-and-push, deploy-to-ec2]  # build-and-push 또는 deploy-to-ec2 작업 중 하나라도 실패하면 실행
-
-    steps:
-      # 실패 시 Discord 알림 전송
-      - name: Notify Discord of Failure
-        if: failure()  # 실패했을 경우에만 실행
-        run: |
-          # Discord 웹훅을 통해 실패 알림 전송
-          curl -H "Content-Type: application/json" \
-            -d '{"content": "❌ CI/CD 실패! 허거덩 ~ "}' \
-            https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
+          if [ ${{ needs.deploy-to-ec2.result }} == 'success' ]; then
+            curl -H "Content-Type: application/json" \
+              -d '{"content": "✅ CI/CD 완료! Docker 이미지 ECR 푸시 + EC2 컨테이너 실행 완료."}' \
+              https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
+          else
+            curl -H "Content-Type: application/json" \
+              -d '{"content": "❌ CI/CD 실패! 허거덩~ "}' \
+              https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
