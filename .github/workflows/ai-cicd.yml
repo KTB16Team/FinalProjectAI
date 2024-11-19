@@ -2,59 +2,59 @@ name: AI ECR Build and Deploy to EC2  # 워크플로 이름 정의
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "dev" ]  # dev 브랜치에 푸시될 때 트리거
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "dev" ]  # dev 브랜치로의 풀 리퀘스트가 생성될 때 트리거
 
 jobs:
+  # Docker 이미지 빌드 및 ECR 푸시 작업
   build-and-push:
     runs-on: ubuntu-latest  # 최신 우분투 환경에서 실행
 
     steps:
-      # 1. 레포지토리 체크아웃
+      # 1. GitHub 레포지토리 체크아웃
       - name: Checkout repository
-        uses: actions/checkout@v4  # GitHub Actions에서 소스 코드를 체크아웃하는 액션
+        uses: actions/checkout@v4  # GitHub Actions에서 제공하는 소스 코드 체크아웃 액션
 
-      # 2. Amazon ECR에 로그인
+      # 2. Amazon ECR 로그인
       - name: Log in to Amazon ECR
         run: |
           # AWS 자격 증명 설정
           aws configure set aws_access_key_id ${{ secrets.AWS_ECR_IAM_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_ECR_IAM_SECRET_ACCESS_KEY }}
-          # ECR에 로그인하여 Docker CLI로 ECR에 접근할 수 있도록 설정
+          # ECR에 로그인하여 Docker CLI로 접근 가능하도록 설정
           aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
-      # Docker 이미지 빌드 (OPENAI_API_KEY 전달)
+      # 3. Docker 이미지 빌드
       - name: Build Docker image
-        working-directory: app  # `app` 디렉터리에서 실행
-        run: docker build -t ai-service --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .
+        working-directory: app  # `app` 디렉토리에서 실행
+        run: docker build -t ai-service --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .  # OPENAI_API_KEY를 빌드 인자로 전달
 
-      # 4. ECR에 푸시할 이미지 태그 지정
+      # 4. ECR에 푸시할 이미지 태그 추가
       - name: Tag Docker image for ECR
-        run: docker tag ai-service:latest ${{ secrets.ECR_REGISTRY }}:latest
-        # ECR에 푸시하기 위해 이미지에 ECR 리포지토리 URI로 태그 추가
+        run: docker tag ai-service:latest ${{ secrets.ECR_REGISTRY }}:latest  # 최신 버전 태그 지정
 
-      # 5. ECR로 이미지 푸시
+      # 5. Amazon ECR로 Docker 이미지 푸시
       - name: Push to Amazon ECR
-        run: docker push ${{ secrets.ECR_REGISTRY }}:latest
-        # 태그가 지정된 이미지를 Amazon ECR 리포지토리에 푸시
+        run: docker push ${{ secrets.ECR_REGISTRY }}:latest  # ECR에 이미지 업로드
 
+  # EC2에 배포 작업
   deploy-to-ec2:
-    runs-on: ubuntu-latest
-    needs: build-and-push  # 이전 build-and-push 작업이 완료되어야 실행
+    runs-on: ubuntu-latest  # 최신 우분투 환경에서 실행
+    needs: build-and-push  # build-and-push 작업이 완료되어야 실행 가능
 
     steps:
-      # 1. EC2에 SSH 연결하여 Docker 환경 설정 및 이미지 관리
+      # 1. EC2에 접속하여 Docker 환경 설정
       - name: Connect to EC2 and Setup Docker
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@master  # EC2에 SSH로 연결
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}  # EC2 인스턴스 호스트
+          username: ${{ secrets.EC2_USER }}  # EC2 사용자 이름
+          key: ${{ secrets.EC2_SSH_KEY }}  # SSH 키
           script: |
-            # 도커 이미지 삭제
+            # 기존 Docker 이미지 정리
             docker image prune -a -f
-            # ECR에서 최신 이미지 Pull
+            # Amazon ECR에 로그인 후 최신 Docker 이미지 Pull
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
             docker pull ${{ secrets.ECR_REGISTRY }}:latest
 
@@ -66,12 +66,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # 기존 컨테이너가 실행 중인지 확인
             if [ $(docker ps -q -f name=ai-service) ]; then
-                docker stop ai-service
-                docker rm ai-service
+                docker stop ai-service  # 컨테이너 정지
+                docker rm ai-service    # 컨테이너 삭제
             fi
 
-      # 3. 새로운 컨테이너 실행 (CloudWatch 로그 설정 추가)
+      # 3. 새로운 Docker 컨테이너 실행
       - name: Run New Docker Container
         uses: appleboy/ssh-action@master
         with:
@@ -79,6 +80,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Docker 컨테이너 실행 (CloudWatch 로그 설정 포함)
             docker run -d -p 8000:8000 \
             --name ai-service \
             --log-driver=awslogs \
@@ -87,7 +89,7 @@ jobs:
             --log-opt awslogs-stream=AimoAI \
             ${{ secrets.ECR_REGISTRY }}:latest
 
-      # 4. 헬스체크 - 컨테이너가 실행 중인지 확인
+      # 4. 헬스 체크 - 컨테이너가 실행 중인지 확인
       - name: Health Check Container
         uses: appleboy/ssh-action@master
         with:
@@ -95,22 +97,39 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # 컨테이너 실행 여부 확인
             sleep 10  # 컨테이너가 시작될 시간을 기다림
             if [ $(docker inspect -f '{{.State.Running}}' ai-service) != "true" ]; then
-                echo "Error: Container failed to start."
+                echo "Error: Container failed to start."  # 에러 메시지 출력
                 exit 1
             fi
 
-  notify-discord:
-    runs-on: ubuntu-latest
-    needs: deploy-to-ec2
+  # 성공 알림 작업
+  notify-success:
+    runs-on: ubuntu-latest  # 최신 우분투 환경에서 실행
+    needs: deploy-to-ec2  # deploy-to-ec2 작업이 완료되어야 실행 가능
 
     steps:
-      # 1. 전체 작업 성공 시 최종 디스코드 알림 전송
+      # 성공 시 Discord 알림 전송
       - name: Notify Discord of Successful Deployment
-        if: success()  # 모든 단계가 성공한 경우에만 실행
+        if: success()  # 성공했을 경우에만 실행
         run: |
-          # Discord 웹훅을 통해 전체 과정 완료 알림 전송
+          # Discord 웹훅을 통해 성공 알림 전송
           curl -H "Content-Type: application/json" \
-            -d '{"content": "CI/CD 작업이 성공적으로 완료되었습니다! Docker 이미지가 ECR에 푸시되고, EC2에서 컨테이너가 실행되었습니다."}' \
+            -d '{"content": "✅ CI/CD 완료! : Docker 이미지 ECR 푸시 + 컨테이너 실행완."}' \
+            https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
+
+  # 실패 알림 작업
+  notify-failure:
+    runs-on: ubuntu-latest  # 최신 우분투 환경에서 실행
+    needs: [build-and-push, deploy-to-ec2]  # build-and-push 또는 deploy-to-ec2 작업 중 하나라도 실패하면 실행
+
+    steps:
+      # 실패 시 Discord 알림 전송
+      - name: Notify Discord of Failure
+        if: failure()  # 실패했을 경우에만 실행
+        run: |
+          # Discord 웹훅을 통해 실패 알림 전송
+          curl -H "Content-Type: application/json" \
+            -d '{"content": "❌ CI/CD 실패! 허거덩 ~ "}' \
             https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
