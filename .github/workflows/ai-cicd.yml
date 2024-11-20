@@ -118,6 +118,9 @@ jobs:
           # GitHub Actions 링크 생성
           ACTIONS_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   
+          # 한국 시간 생성
+          TIMESTAMP=$(TZ='Asia/Seoul' date +'%p %I:%M' | sed 's/AM/오전/g; s/PM/오후/g')
+
           # 성공 및 실패 여부 확인
           if [[ "${{ needs.build-and-push.result }}" == "success" && "${{ needs.deploy-to-ec2.result }}" == "success" ]]; then
             # 성공 Embed 메시지
@@ -132,7 +135,7 @@ jobs:
                     { "name": "Deploy 결과", "value": "'"${{ needs.deploy-to-ec2.result }}"'", "inline": true }
                   ],
                   "footer": {
-                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M' | sed 's/AM/오전/g; s/PM/오후/g')"'" # 한국 시간 표시 
+                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$TIMESTAMP"'"
                   }
                 }]
               }' \
@@ -150,7 +153,7 @@ jobs:
                     { "name": "Deploy 결과", "value": "'"${{ needs.deploy-to-ec2.result }}"'", "inline": true }
                   ],
                   "footer": {
-                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M')"'" # 한국 시간 표시
+                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$TIMESTAMP"'"
                   }
                 }]
               }' \
