@@ -42,7 +42,7 @@ jobs:
   deploy-to-ec2:
     runs-on: ubuntu-latest
     needs: build-and-push  # build-and-push 작업이 완료되어야 실행 가능
-    continue-on-error: true  # 작업 실패 시에도 워크플로가 중단되지 않도록 설정
+    #continue-on-error: true  # 작업 실패 시에도 워크플로가 중단되지 않도록 설정
 
     steps:
       # 1. EC2에 접속하여 Docker 환경 설정 및 최신 이미지 가져오기
@@ -124,14 +124,15 @@ jobs:
             curl -H "Content-Type: application/json" \
               -d '{
                 "embeds": [{
-                  "title": "✅ CI/CD 완료",
+                  "title": "✅ AI CI/CD 완료",
+                  "description": "아싸! 성공!",
                   "color": 3066993,
                   "fields": [
-                    { "name": "Build 결과", "value": "'${{ needs.build-and-push.result }}'", "inline": true },
-                    { "name": "Deploy 결과", "value": "'${{ needs.deploy-to-ec2.result }}'", "inline": true }
+                    { "name": "Build 결과", "value": "'"${{ needs.build-and-push.result }}"'", "inline": true },
+                    { "name": "Deploy 결과", "value": "'"${{ needs.deploy-to-ec2.result }}"'", "inline": true }
                   ],
                   "footer": {
-                    "text": "Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M')"'" # 한국 시간 표시
+                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M' | sed 's/AM/오전/g; s/PM/오후/g')"'" # 한국 시간 표시 
                   }
                 }]
               }' \
@@ -141,15 +142,15 @@ jobs:
             curl -H "Content-Type: application/json" \
               -d '{
                 "embeds": [{
-                  "title": "❌ CI/CD 실패",
-                  "description": "에러가 발생했습니다. [로그 확인하기]('"$ACTIONS_URL"')",
+                  "title": "❌ AI CI/CD 실패",
+                  "description": "헉 레전드 사건 발생!! [로그 확인하기]('"$ACTIONS_URL"')",
                   "color": 15158332,
                   "fields": [
-                    { "name": "Build 결과", "value": "'${{ needs.build-and-push.result }}'", "inline": true },
-                    { "name": "Deploy 결과", "value": "'${{ needs.deploy-to-ec2.result }}'", "inline": true }
+                    { "name": "Build 결과", "value": "'"${{ needs.build-and-push.result }}"'", "inline": true },
+                    { "name": "Deploy 결과", "value": "'"${{ needs.deploy-to-ec2.result }}"'", "inline": true }
                   ],
                   "footer": {
-                    "text": "Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M')"'" # 한국 시간 표시
+                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M')"'" # 한국 시간 표시
                   }
                 }]
               }' \
