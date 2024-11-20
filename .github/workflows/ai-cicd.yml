@@ -108,21 +108,50 @@ jobs:
 
   # 알림 작업 (성공 및 실패 모두 처리)
   notify:
-    runs-on: ubuntu-latest  
-    needs: [build-and-push, deploy-to-ec2]  # build-and-push 및 deploy-to-ec2 작업 이후 실행
-
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-to-ec2]
+  
     steps:
-      # 성공 및 실패 여부에 따라 Discord 알림 전송
       - name: Notify Discord of Build and Deployment Result
+        if: always()  # 항상 실행
         run: |
-          # build-and-push 및 deploy-to-ec2 작업 결과 확인
+          # GitHub Actions 링크 생성
+          ACTIONS_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  
+          # 성공 및 실패 여부 확인
           if [[ "${{ needs.build-and-push.result }}" == "success" && "${{ needs.deploy-to-ec2.result }}" == "success" ]]; then
-            # 성공 시 Discord 알림
+            # 성공 Embed 메시지
             curl -H "Content-Type: application/json" \
-              -d '{"content": "✅ CI/CD 완료! Docker 이미지 ECR 푸시 + EC2 컨테이너 실행 완료."}' \
+              -d '{
+                "embeds": [{
+                  "title": "✅ CI/CD 완료",
+                  "color": 3066993,
+                  "fields": [
+                    { "name": "Build 결과", "value": "'${{ needs.build-and-push.result }}'", "inline": true },
+                    { "name": "Deploy 결과", "value": "'${{ needs.deploy-to-ec2.result }}'", "inline": true }
+                  ],
+                  "footer": {
+                    "text": "Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M')"'" # 한국 시간 표시
+                  }
+                }]
+              }' \
               https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
           else
-            # 실패 시 Discord 알림
+            # 실패 Embed 메시지
             curl -H "Content-Type: application/json" \
-              -d '{"content": "❌ CI/CD 실패! 에러 확인 요망."}' \
+              -d '{
+                "embeds": [{
+                  "title": "❌ CI/CD 실패",
+                  "description": "에러가 발생했습니다. [로그 확인하기]('"$ACTIONS_URL"')",
+                  "color": 15158332,
+                  "fields": [
+                    { "name": "Build 결과", "value": "'${{ needs.build-and-push.result }}'", "inline": true },
+                    { "name": "Deploy 결과", "value": "'${{ needs.deploy-to-ec2.result }}'", "inline": true }
+                  ],
+                  "footer": {
+                    "text": "Github Action에서 전송됨 - '"$(TZ='Asia/Seoul' date +'%p %I:%M')"'" # 한국 시간 표시
+                  }
+                }]
+              }' \
               https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
+          fi
