@@ -102,17 +102,21 @@ class DialogueEmpathyModel(nn.Module):
             party_hidden = self.layer_norm(party_output)
             
             # 2.
+            new_global_hidden = global_hidden.clone()
             speaker_states = []
             for s in range(self.num_speakers):
                 is_current_speaker = (curr_speaker == s).float().unsqueeze(1).unsqueeze(2)
                 global_input = torch.cat([curr_utterance, global_hidden[:, s:s+1, :]], dim=-1)
                 global_output, _ = self.global_gru(global_input, global_hidden[:, s:s+1, :].transpose(0,1))
-                global_hidden[:, s:s+1, :] = self.layer_norm(
-                    global_output * is_current_speaker + 
-                    global_hidden[:, s:s+1, :] * (1-is_current_speaker)
-                )
-                speaker_states.append(global_hidden[:, s:s+1, :])
-            
+                normalized_output = self.layer_norm(global_output)
+
+                new_global_hidden[:, s:s+1, :] = normalized_output * is_current_speaker + \
+                global_hidden[:, s:s+1, :] * (1-is_current_speaker)
+            global_hidden = new_global_hidden 
+
+
+            speaker_states = [global_hidden[:, s:s+1, :] for s in range(self.num_speakers)]
+            curr_speaker_state = torch.stack([speaker_states[s.item()] for s in curr_speaker], dim=1)
             # 현재 화자의 상태 가져오기
             curr_speaker_state = torch.stack([speaker_states[s.item()] for s in curr_speaker], dim=1)
             
