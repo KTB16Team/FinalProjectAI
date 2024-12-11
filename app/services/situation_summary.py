@@ -91,7 +91,7 @@ async def test_response(ref_text):
 
     return situations
 
-async def test_response(ref_text):
+async def test_response3(ref_text):
     llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.3)
     # Combined prompt template for summarization and evaluation
     combined_textbook = '''
@@ -140,7 +140,7 @@ async def test_response(ref_text):
     return situations
 
 
-def test_response(ref_text):
+def test_response2(ref_text):
     llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.3)
     # Combined prompt template for summarization and evaluation
     combined_textbook = '''
