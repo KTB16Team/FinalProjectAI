@@ -33,7 +33,7 @@ client = openai.OpenAI(
 
 analyzer = RelationshipAnalyzer
     
-async def test_response(ref_text):
+def test_response(ref_text):
     llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.3)
     # Combined prompt template for summarization and evaluation
     combined_textbook = '''
