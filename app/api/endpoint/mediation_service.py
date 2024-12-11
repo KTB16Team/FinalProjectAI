@@ -6,6 +6,7 @@ from datetime import datetime
 # from app.db.database import engine
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
+from services.behavior_classification import
 import logging
 from services.emotion_behavior_situation import RelationshipAnalyzer
 # import uuid
@@ -142,3 +143,31 @@ async def process_judge(request: JudgeRequest):
     return response
 #########
 
+################
+@router.post("/temptest", status_code=201)
+def testclassify_text(test_request: TestRequest):
+    # 입력 텍스트 받기
+    test_text = test_request.text
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Received test text: {test_text}")
+    print(f"\n입력 텍스트: {test_text}")
+
+    # 모델 분류
+    try:
+        prediction, confidence = classify_text(model, tokenizer, test_text, device, label_map)
+
+        # 결과 출력
+        print(f"예측된 카테고리: {prediction} (확신도: {confidence:.2%})")
+
+        # 응답 생성
+        response = {
+            "prediction": prediction,
+            "confidence": confidence
+        }
+        return response
+
+    except Exception as e:
+        logger.error(f"Error in classify_text: {e}")
+        print(f"오류 발생: {e}")
+        return {"error": "An error occurred while processing the text"}
+#########
