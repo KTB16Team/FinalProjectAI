@@ -8,9 +8,9 @@ from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STT
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 import logging
 from services.emotion_behavior_situation import RelationshipAnalyzer
-import uuid
-import pika
-import redis
+# import uuid
+# import pika
+# import redis
 from fastapi import FastAPI, HTTPException, status
 # from app.services.emotion_behavior_situation import RelationshipAnalyzer
 router = APIRouter()
