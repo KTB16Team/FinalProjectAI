@@ -8,6 +8,7 @@ from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STT
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 import logging
 from services.emotion_behavior_situation import RelationshipAnalyzer
+from services.test_behavior_classification import behavior_classification_test
 # from app.services.emotion_behavior_situation import RelationshipAnalyzer
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
@@ -100,3 +101,10 @@ async def process_judge(request: JudgeRequest):
 #         result = await conn.execute(query)
 #         user_info = [row[0] for row in result.fetchall()]
 #     return user_info
+
+@router.post("/temp_test", response_model=DataInfoSummary, status_code=201)
+def init_model():
+    test_text = "프로젝트 진행 상황이 많이 늦어지고 있어요. 이대로 가다가는 기한 내에 끝내기 힘들 것 같은데, 어떻게 생각하세요?"
+    result = behavior_classification_test(test_text)
+    print("\n테스트 결과:", result)
+    return result
