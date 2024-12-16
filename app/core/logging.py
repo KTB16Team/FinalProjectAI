@@ -7,7 +7,7 @@ LOG_FILE = "logs/app.log"
 
 # Logstash 서버 정보
 LOGSTASH_HOST = settings.LOGSTASH_HOST  # Logstash 서버 IP 또는 도메인
-LOGSTASH_PORT = 5044                 # Logstash에서 수신하는 TCP 포트
+LOGSTASH_PORT = 5045                 # Logstash에서 수신하는 TCP 포트
 
 # 로깅 설정 함수
 def setup_logger():

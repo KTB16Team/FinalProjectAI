@@ -7,7 +7,7 @@ from sqlalchemy import text
 from datetime import datetime
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
-from services.STT import S3SttService
+from services.STT import download_s3_file
 from core.logging import setup_logger
 from core.config import settings
 import requests
@@ -25,7 +25,7 @@ analyzer = RelationshipAnalyzer()
 async def get_voice(request: STTRequest):
     logger.info("get_infos start")
     logger.info(f"audio URL : {request.url}")
-    S3SttService.download_file_from_s3(request.url)
+    download_s3_file(request.url)
     logger.info(f"download_file_from_s3")
     # if not request.url:
     #     raise HTTPException(status_code=400, detail="URL_NOT_PROVIDED")
@@ -54,7 +54,7 @@ async def get_voice(request: STTRequest):
     #     )
     # )
     # logger.info(f"response : {response}")
-    return response
+    return
 
 # @router.post("/judgement", response_model=DataInfoSummary, status_code=201)
 # async def process_judge(request: JudgeRequest):
