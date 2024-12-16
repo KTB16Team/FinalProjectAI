@@ -1,136 +1,82 @@
-# test_empathy_score.py
-
-import os
-import sys
-
-# 프로젝트 루트 디렉토리를 sys.path에 추가
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(current_dir))
-sys.path.append(project_root)
-
 import torch
-from transformers import AutoTokenizer, AutoModel
-from app.services.empathy_model import DialogueEmpathyModel, DialogueDataset
+import unittest
+from torch.utils.data import DataLoader
+from transformers import AutoTokenizer
+from ..services.empathy_score import DialogueEmpathyModel, EmpathyLoss, train_model, eval_model
+from ..services.empathy_data_preprocessing import DialogueDataset, collate_fn, split_data
 
-def test_model_prediction(model_path):
-    """공감 예측 테스트"""
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
-
-    # 모델 로드
-    try:
-        model = DialogueEmpathyModel(
-            input_size=768,
-            hidden_size=512,
-            num_speakers=10,
-            num_layers=1,
-            dropout=0.5
-        ).to(device)
-        
-        checkpoint = torch.load(model_path, map_location=device)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.eval()
-        print("Model loaded successfully")
-    except Exception as e:
-        print(f"Error loading model: {str(e)}")
-        return
-
-    # BERT 모델 초기화
-    if not hasattr(DialogueDataset, 'bert'):
-        DialogueDataset.bert = AutoModel.from_pretrained('skt/kobert-base-v1')
-        DialogueDataset.bert.eval()
-        
-    # 토크나이저 초기화
-    tokenizer = AutoTokenizer.from_pretrained('skt/kobert-base-v1')
-    
-    # 테스트 케이스
-    test_cases = [
-        ("오늘 발표했는데 긴장해서 실수했어...", "헐 발표면 진짜 많이 긴장되었겠다. 실수는 누구나 할 수 있지! 담에 잘하면 되지. 너무 수고했다 진짜!"),
-        ("새로운 취미를 시작해보고 싶은데 뭐가 좋을까?", "요즘 힘들어서 기분 전환이 필요했구나. 같이 찾아볼까?"),
-        ("일이 너무 많아서 지쳐요.", "뭐 어떡해 해야지.")
+def mock_dataset():
+    """테스트를 위한 더미 데이터셋 생성"""
+    return [
+        {
+            "dialogue_id": "001",
+            "utterances": [
+                {"utterance_id": "001_1", "text": "자기야, 오늘 기분 어때?", "speaker": "A", "empathy_score": 0.0},
+                {"utterance_id": "001_2", "text": "회사에서 실수해서 팀장님한테 혼났어... 많이 속상해", "speaker": "B", "empathy_score": 0.0},
+                {"utterance_id": "001_3", "text": "많이 힘들었겠다... 우리 자기가 평소에 얼마나 열심히 하는데. 저녁에 맛있는 거 먹으러 갈까?", "speaker": "A", "empathy_score": 0.9}
+            ]
+        },
+        {
+            "dialogue_id": "002",
+            "utterances": [
+                {"utterance_id": "002_1", "text": "나 요즘 살이 자꾸 찌는 것 같아서 너무 스트레스 받아...", "speaker": "A", "empathy_score": 0.0},
+                {"utterance_id": "002_2", "text": "우리 자기 충분히 예쁜데! 그래도 자기가 신경 쓰이면 우리 같이 운동해볼까? 나도 요즘 운동하고 싶었거든!", "speaker": "B", "empathy_score": 0.85},
+                {"utterance_id": "002_3", "text": "같이 가주는 거야? 역시 자기밖에 없다ㅠㅠ", "speaker": "A", "empathy_score": 0.0}
+            ]
+        },
+        {
+            "dialogue_id": "003",
+            "utterances": [
+                {"utterance_id": "003_1", "text": "자기야... 우리 부모님이 또 결혼 얘기 꺼내셨어", "speaker": "A", "empathy_score": 0.0},
+                {"utterance_id": "003_2", "text": "많이 부담됐겠다... 우리 천천히 준비하면 되는데. 오늘 저녁에 만나서 얘기 나눌까?", "speaker": "B", "empathy_score": 0.95}
+            ]
+        }
     ]
-    
-    print("\n=== 공감 예측 테스트 ===")
-    
-    with torch.no_grad():
-        for speaker1, speaker2 in test_cases:
-            print(f"\nA: {speaker1}")
-            print(f"B: {speaker2}")
-            
-            # 텍스트 인코딩
-            inputs = tokenizer(
-                speaker2,
-                padding='max_length',
-                truncation=True,
-                max_length=256,
-                return_tensors='pt'
-            )
-            inputs['token_type_ids'] = torch.zeros_like(inputs['input_ids'])
-            inputs = {k: v.to(device) for k, v in inputs.items()}
-            
-            # BERT 특성 추출
-            outputs = DialogueDataset.bert(**inputs)
-            hidden_states = outputs.last_hidden_state.mean(dim=1)
-            
-            # 예측
-            utterance_vector = hidden_states.unsqueeze(0)
-            speaker_ids = torch.tensor([[0]]).to(device)
-            prediction = model(utterance_vector, speaker_ids)
-            score = prediction.squeeze().item()
-            
-            print(f"예측된 공감 점수: {score:.2f}")
-            
-            # 공감 수준 판단
-            if score <= 0.39:
-                print("낮은 공감 수준")
-            elif score <= 0.79:
-                print("중간 공감 수준")
-            else:
-                print("높은 공감 수준")
 
-def test_model_loading(model_path):
-    """모델 로드 테스트"""
-    print("\n=== 모델 로드 테스트 ===")
-    try:
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
-        # 모델 로드
-        model = DialogueEmpathyModel(
+class TestDialogueEmpathyModel(unittest.TestCase):
+    def setUp(self):
+        """테스트 세팅 초기화"""
+        self.tokenizer = AutoTokenizer.from_pretrained("skt/kobert-base-v1")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # 저장된 모델 불러오기
+        self.model = DialogueEmpathyModel(
             input_size=768,
-            hidden_size=512,
+            hidden_size=256,
             num_speakers=10,
             num_layers=1,
             dropout=0.5
-        ).to(device)
-        
-        checkpoint = torch.load(model_path, map_location=device)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.eval()
-        
-        print("모델 로드 성공!")
-        
-        # 모델 구조 출력
-        print("\n모델 구조:")
-        print(model)
-        
-        # 모델 파라미터 수 계산
-        total_params = sum(p.numel() for p in model.parameters())
-        print(f"\n총 파라미터 수: {total_params:,}")
-        
-        return True
-    except Exception as e:
-        print(f"모델 로드 실패: {str(e)}")
-        return False
+        ).to(self.device)
+
+        self.model.load_state_dict(torch.load("Final/best_model.pt", map_location=self.device))
+        self.model.eval()
+
+    def test_dataset_loading(self):
+        """Dataset 로드 및 토크나이저 작동 확인"""
+        dataset = DialogueDataset(mock_dataset(), self.tokenizer)
+        dataloader = DataLoader(dataset, batch_size=2, collate_fn=collate_fn)
+
+        for batch in dataloader:
+            utterances, speaker_ids, empathy_scores = batch
+            self.assertEqual(len(utterances), 2)
+            self.assertEqual(utterances.size(-1), 768)  # BERT hidden size 확인
+            break
+
+    def test_model_prediction(self):
+        """저장된 모델을 활용한 예측 테스트"""
+        dataset = DialogueDataset(mock_dataset(), self.tokenizer)
+        dataloader = DataLoader(dataset, batch_size=2, collate_fn=collate_fn)
+
+        for batch in dataloader:
+            utterances, speaker_ids, _ = batch
+            utterances, speaker_ids = utterances.to(self.device), speaker_ids.to(self.device)
+
+            with torch.no_grad():
+                predictions = self.model(utterances, speaker_ids)
+
+            self.assertIsNotNone(predictions, "Predictions should not be None")
+            self.assertEqual(predictions.size(0), utterances.size(0), "Batch size should match predictions")
+            break
 
 if __name__ == "__main__":
-    # 모델 경로 설정
-    checkpoint_path = os.path.join(project_root, '/Users/alice.kim/Desktop/aa/checkpoints/best_model.pt')
-    # 모델 존재 확인
-    if not os.path.exists(checkpoint_path):
-        print(f"Error: Model file not found at {checkpoint_path}")
-        print(f"Looking for model at: {checkpoint_path}")
-    else:
-        # 모델 로드 테스트
-        if test_model_loading(checkpoint_path):
-            # 예측 테스트
-            test_model_prediction(checkpoint_path)
+    unittest.main()

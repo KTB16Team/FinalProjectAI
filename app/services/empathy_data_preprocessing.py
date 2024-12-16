@@ -4,72 +4,18 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertModel, AutoTokenizer
 from empathy_score import DialogueEmpathyModel, EmpathyLoss,train_model, eval_model
 from sklearn.model_selection import train_test_split
+from kobert_tokenizer import KoBERTTokenizer
 from transformers import AutoModel
 from tqdm import tqdm
 import random
 import requests
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn.utils import clip_grad_norm_
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import matplotlib.pyplot as plt
-
-def save_checkpoint(model, optimizer, epoch, train_loss, val_loss, save_path, is_best=False):
-    """
-    모델 체크포인트를 저장합니다.
-    
-    Args:
-        model: 저장할 모델
-        optimizer: 옵티마이저
-        epoch: 현재 에폭
-        train_loss: 학습 손실
-        val_loss: 검증 손실
-        save_path: 저장할 경로
-        is_best: 현재 모델이 최고 성능인지 여부
-    """
-    checkpoint = {
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'train_loss': train_loss,
-        'val_loss': val_loss
-    }
-    
-    torch.save(checkpoint, save_path)
-    print(f'Checkpoint saved to {save_path}')
-    
-    if is_best:
-        best_path = os.path.join(os.path.dirname(save_path), 'best_model.pt')
-        torch.save(checkpoint, best_path)
-        print(f'Best model saved to {best_path}')
-
-def load_checkpoint(model, optimizer, load_path, device):
-    try:
-        if os.path.exists(load_path):
-            try:
-                checkpoint = torch.load(load_path, map_location=device)
-                model.load_state_dict(checkpoint['model_state_dict'])
-                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-                print(f'Checkpoint loaded from {load_path}')
-                print(f"Restored epoch: {checkpoint['epoch']}")
-                return checkpoint['epoch'], checkpoint['train_loss'], checkpoint['val_loss']
-            except RuntimeError as e:
-                print(f"Error loading checkpoint: {str(e)}")
-                print("Deleting incompatible checkpoint and starting fresh")
-                os.remove(load_path)
-                return 0, float('inf'), float('inf')
-        else:
-            print(f"No checkpoint found at {load_path}")
-            return 0, float('inf'), float('inf')
-    except Exception as e:
-        print(f"Unexpected error loading checkpoint: {str(e)}")
-        return 0, float('inf'), float('inf')
+import re
 
 class TextAugmentation:
     def __init__(self):
+        # 한국어 유사어 사전 확장
         self.synonym_dict = {
             '좋다': ['훌륭하다', '괜찮다', '멋지다', '만족스럽다'],
             '나쁘다': ['싫다', '안좋다', '형편없다', '불만족스럽다'],
@@ -89,6 +35,7 @@ class TextAugmentation:
         }
         
     def random_deletion(self, text, p=0.1):
+        """임의의 단어를 삭제"""
         words = text.split()
         if len(words) == 1:
             return text
@@ -168,7 +115,8 @@ class TextAugmentation:
         
         for _ in range(num_aug):
             aug_text = text
-
+            
+            # 각 증강 기법을 랜덤하게 적용
             if random.random() < 0.3:
                 aug_text = self.random_deletion(aug_text)
             if random.random() < 0.3:
@@ -254,6 +202,7 @@ class DialogueDataset(Dataset):
                     print(f"Token type IDs shape: {inputs['token_type_ids'].shape}")
                     raise e
                 
+        # 텐서로 변환
         utterance_vectors = torch.stack(encoded_texts)
         speaker_ids = torch.tensor(speaker_ids)
         empathy_scores = torch.tensor(empathy_scores)
@@ -321,29 +270,43 @@ def predict_empathy(model, tokenizer, text, device):
     """단일 텍스트에 대한 공감 점수 예측"""
     model.eval()
     
+    # 입력 텍스트 처리
     inputs = tokenizer(
         text,
         padding='max_length',
         truncation=True,
         max_length=128,
-        return_tensors='pt'
+        return_tensors='pt',
+        # return_token_type_ids=True
     )
+    # if 'token_type_ids' not in inputs:
     inputs['token_type_ids'] = torch.zeros_like(inputs['input_ids'])
     
+    # BERT를 통한 텍스트 인코딩
     with torch.no_grad():
-        # BERT 특성 추출
         inputs = {k: v.to(device) for k, v in inputs.items()}
-        outputs = DialogueDataset.bert(**inputs)
-        hidden_states = outputs.last_hidden_state.mean(dim=1)
         
-        # 예측
-        utterance_vector = hidden_states.unsqueeze(0)
-        speaker_ids = torch.tensor([[0]]).to(device)  # Default speaker ID
+        try:
+            outputs = DialogueDataset.bert(**inputs)
+            hidden_states = outputs.last_hidden_state.mean(dim=1)
+        except Exception as e:
+            print(f"Error processing text: {text}")
+            print(f"Input shapes:")
+            for k, v in inputs.items():
+                print(f"{k}: {v.shape}")
+            raise e
+    
+    # 모델 예측
+    utterance_vector = hidden_states.unsqueeze(0)  # (1, 1, hidden_size)
+    speaker_ids = torch.tensor([[0]]).to(device)  # 단일 화자 가정
+    
+    with torch.no_grad():
         prediction = model(utterance_vector, speaker_ids)
-        score = prediction.squeeze().item()
-        
-        return round(score, 2)
-
+        if prediction.dim() == 3:
+            prediction = prediction.squeeze(-1)
+        prediction = prediction.squeeze()
+    
+    return prediction.item()
 
 def test_dialogue_example(model, tokenizer, device):
     test_dialogues = [
@@ -482,184 +445,118 @@ def process_augmented_data(train_data, augmented_texts, augmentation_multiplier=
             train_data_augmented.append(augmented_dialogue)
     
     return train_data_augmented
-class EarlyStopHandler:
-    def __init__(self, patience=7, min_delta=0.001):
-        self.patience = patience
-        self.min_delta = min_delta
-        self.counter = 0
-        self.min_validation_loss = float('inf')
-        self.early_stop = False
 
-    def __call__(self, validation_loss):
-        if validation_loss < self.min_validation_loss:
-            self.min_validation_loss = validation_loss
-            self.counter = 0
-        elif validation_loss > (self.min_validation_loss + self.min_delta):
-            self.counter += 1
-            if self.counter >= self.patience:
-                self.early_stop = True
 
 def main():
-    try:
-        tokenizer = AutoTokenizer.from_pretrained('skt/kobert-base-v1')
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        print(f"Using device: {device}")
+    tokenizer = AutoTokenizer.from_pretrained('skt/kobert-base-v1')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
 
-        input_size = 768 
-        hidden_size = 512  
-        num_speakers = 10
-        num_epochs = 10   
-        batch_size = 16
-        learning_rate = 2e-5 #더 낮출까나
-        weight_decay = 0.01  
-        dropout_rate = 0.5
+    input_size = 768  # BERT hidden size
+    hidden_size = 256
+    num_speakers = 10
+    num_epochs = 10
+    batch_size = 64
+    learning_rate = 0.001
+    
+    train_file = "/Users/alice.kim/Desktop/aa/Final/app/services/empathy_dataset.json"
+
+    # 데이터 분할 및 증강
+    train_data, val_data = split_data(train_file, train_ratio=0.8)
+    
+    # 데이터 크기 확인
+    print(f"\nInitial data split:")
+    print(f"Train data size: {len(train_data)}")
+    print(f"Val data size: {len(val_data)}")
+
+    # 데이터 증강
+    train_texts = [u['text'] for d in train_data for u in d['utterances']]
+    augmentation_multiplier = 4
+    
+    print("\nStarting data augmentation...")
+    augmented_texts = augment_data(train_texts, augmentation_multiplier=augmentation_multiplier)
+    train_data_augmented = process_augmented_data(train_data, augmented_texts, augmentation_multiplier)
+
+    print(f"\nAfter augmentation:")
+    print(f"Original train data size: {len(train_data)}")
+    print(f"Augmented train data size: {len(train_data_augmented)}")
+
+    # DataLoader 생성
+    print("\nCreating data loaders...")
+    train_dataset_augmented = DialogueDataset(train_data_augmented, tokenizer)
+    val_dataset = DialogueDataset(val_data, tokenizer)
+
+    train_loader_augmented = DataLoader(
+        train_dataset_augmented,
+        batch_size=batch_size,
+        shuffle=True,
+        collate_fn=collate_fn
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=collate_fn
+    )
+
+    print(f"Train loader batches: {len(train_loader_augmented)}")
+    print(f"Val loader batches: {len(val_loader)}")
+
+    print("\nInitializing model...")
+    num_layers = 1
+    model = DialogueEmpathyModel(
+        input_size=input_size,
+        hidden_size=hidden_size,
+        num_speakers=num_speakers,
+        num_layers=num_layers,
+        dropout=0.5 if num_layers > 1 else 0
+    ).to(device)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    criterion = EmpathyLoss()
+
+    print("\nStarting training...")
+    train_losses = []
+    val_losses = []
+    best_val_loss = float('inf')
+    
+    for epoch in range(num_epochs):
+        print(f'\nEpoch {epoch+1}/{num_epochs}')
+        print('-' * 20)
         
-        checkpoint_dir = 'checkpoints'
-        os.makedirs(checkpoint_dir, exist_ok=True)
-        
-        for filename in os.listdir(checkpoint_dir):
-            if filename.endswith('.pt'):
-                os.remove(os.path.join(checkpoint_dir,filename))
-                print(f"Deleted old checkpoint: {filename}")
-       
-        
-        print("Loading and preprocessing data...")
-        train_data, val_data = split_data("/Users/alice.kim/Desktop/aa/Final/app/services/empathy_dataset.json", train_ratio=0.8)
-
-
-        train_texts = [u['text'] for d in train_data for u in d['utterances']]
-        augmentation_multiplier = 4
-        print("Augmenting data...")
-        augmented_texts = augment_data(train_texts, augmentation_multiplier=augmentation_multiplier)
-        train_data_augmented = process_augmented_data(train_data, augmented_texts, augmentation_multiplier)
-
-        print(f"Original train data size: {len(train_data)}")
-        print(f"Augmented train data size: {len(train_data_augmented)}")
-
-        print("Creating dataloaders...")
-        train_dataset_augmented = DialogueDataset(train_data_augmented, tokenizer)
-        train_loader_augmented = DataLoader(
-            train_dataset_augmented,
-            batch_size=batch_size,
-            shuffle=True,
-            collate_fn=collate_fn
+        avg_train_loss, epoch_losses = train_model(
+            model, train_loader_augmented, optimizer, criterion, device, max_grad_norm=1.0
         )
+        train_losses.append(avg_train_loss)
+        
+        # 검증
+        val_loss, val_mse, val_mae = eval_model(model, val_loader, criterion, device)
+        val_losses.append(val_loss)
+        
+        print(f'Train Loss: {avg_train_loss:.4f}')
+        print(f'Val Loss: {val_loss:.4f}, Val MSE: {val_mse:.4f}, Val MAE: {val_mae:.4f}')
+        
+        # 최적의 모델 저장
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            torch.save(model.state_dict(), 'best_model.pt')
+            print("Saved best model!")
 
-        val_loader = DataLoader(
-            DialogueDataset(val_data, tokenizer),
-            batch_size=batch_size,
-            shuffle=False,
-            collate_fn=collate_fn
-        )
-        
-        print("Initializing model...")
-        num_layers = 1
-        model = DialogueEmpathyModel(
-            input_size=input_size,
-            hidden_size=hidden_size,
-            num_speakers=num_speakers,
-            num_layers=num_layers,
-            dropout=dropout_rate
-        ).to(device)
-        
-        # L2 정규화가 포함된 optimizer
-        optimizer = torch.optim.Adam(
-            model.parameters(), 
-            lr=learning_rate,
-            weight_decay=weight_decay
-        )
-        
-        # Learning rate scheduler 추가
-        scheduler = torch.optim.lr_scheduler.OneCycleLR(
-            optimizer, 
-            max_lr=0.001, 
-            steps_per_epoch=len(train_loader_augmented), 
-            epochs=num_epochs
-        )
-        
-        criterion = EmpathyLoss()
-        early_stop = EarlyStopHandler(patience=7, min_delta=0.001)
-        
-        print("Starting training loop...")
-        train_losses = []
-        val_losses = []
-        best_val_loss = float('inf')
-        
-        for epoch in range(num_epochs):
-            print(f"\nEpoch {epoch+1}/{num_epochs}")
-            print(f"Current learning rate: {optimizer.param_groups[0]['lr']}")
-            
-            # 학습
-            print("Training...")
-            train_loss, epoch_losses = train_model(model, train_loader_augmented, optimizer, criterion, device, max_grad_norm=1.0)
-            train_losses.append(train_loss)
-            
-            # 검증
-            print("Validating...")
-            val_loss, val_mse, val_mae = eval_model(model, val_loader, criterion, device)
-            val_losses.append(val_loss)
-            
-            print(f'Train Loss: {train_loss:.4f}')
-            print(f'Valid Loss: {val_loss:.4f}, Valid MSE: {val_mse:.4f}, Valid MAE: {val_mae:.4f}')
-            
-            # Learning rate 조정
-            scheduler.step(val_loss)
-            
-            # Early stopping 체크
-            early_stop(val_loss)
-            if early_stop.early_stop:
-                print("Early stopping triggered")
-                break
-            
-            # 체크포인트 저장
-            checkpoint_path = os.path.join(checkpoint_dir, f'checkpoint_epoch_{epoch+1}.pt')
-            is_best = val_loss < best_val_loss
-            if is_best:
-                best_val_loss = val_loss
-                print("New best model!")
-            
-            save_checkpoint(
-                model, 
-                optimizer, 
-                epoch, 
-                train_loss, 
-                val_loss, 
-                checkpoint_path, 
-                is_best
-            )
+    # 테스트 예시 실행
+    print("\nRunning test examples...")
+    test_dialogue_example(model, tokenizer, device)
 
-        print("\nTraining completed. Running final evaluation...")
-        
-        # 최종 테스트
-        print("\nLoading best model for final evaluation...")
-        load_checkpoint(model, optimizer, os.path.join(checkpoint_dir, 'best_model.pt'), device)
-        
-        test_dataset = DialogueDataset(val_data, tokenizer)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
-
-        test_loss, test_mse, test_mae = eval_model(model, test_loader, criterion, device)
-        print(f"\nFinal Test Results (Best Model):")
-        print(f"Test Loss: {test_loss:.4f}, Test MSE: {test_mse:.4f}, Test MAE: {test_mae:.4f}")
-
-        # 예제 대화 테스트
-        test_dialogue_example(model, tokenizer, device)
-        
-        # 학습 곡선 시각화
-        plt.figure(figsize=(10, 6))
-        plt.plot(range(1, len(train_losses) + 1), train_losses, marker='o', label='Training Loss')
-        plt.plot(range(1, len(val_losses) + 1), val_losses, marker='o', label='Validation Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Learning Curves')
-        plt.legend()
-        plt.savefig(os.path.join(checkpoint_dir, 'learning_curves.png'))
-        plt.show()
-
-    except Exception as e:
-        print(f"Error occurred: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise
+    # 학습 곡선 시각화
+    plt.figure(figsize=(12, 6))
+    plt.plot(range(1, num_epochs + 1), train_losses, marker='o', label='Training Loss')
+    plt.plot(range(1, num_epochs + 1), val_losses, marker='o', label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Learning Curves')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 if __name__ == "__main__":
     main()

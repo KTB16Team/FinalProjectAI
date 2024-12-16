@@ -18,7 +18,7 @@ def init_model():
     
     try:
         model = CustomBERTClassifier(num_labels=Config.NUM_LABELS)
-        model_path = os.path.join(PROJECT_ROOT, "services/Behavior_classifier.pt")
+        model_path = os.path.join(PROJECT_ROOT, "/Users/alice.kim/Desktop/aa/Final/Behavior_classifier.pt")
         state_dict = torch.load(model_path, map_location=device)
         model.load_state_dict(state_dict)
         model.to(device)

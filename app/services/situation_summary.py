@@ -1,43 +1,30 @@
+import json
+import os
+from dotenv import load_dotenv
+import openai
+from services.emotion_behavior_situation import RelationshipAnalyzer
+
+# Load OpenAI API Key
+load_dotenv()
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+openai.api_key = OPENAI_API_KEY
+
+# Analyzer 객체
+analyzer = RelationshipAnalyzer()
+
 def situation_summary_GPT(text):
-    analyzer=RelationshipAnalyzer()
     entities = analyzer.analyze(text)
     return entities
-    # return ""
 
 def stt_model(link):
-    A = {'ai_stt':"stt_test_text"}
-    return A
+    return {'ai_stt': "stt_test_text"}
 
 def generate_response(text):
     return "entities"
 
-
-import json
-#%%
-import os
-import json
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from dotenv import load_dotenv
-import openai
-import asyncio
-from services.emotion_behavior_situation import RelationshipAnalyzer
-#%%
-# OPENAI_API_KEY
-load_dotenv()
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-client = openai.OpenAI(
-    api_key = OPENAI_API_KEY,
-)
-
-analyzer = RelationshipAnalyzer
-    
 def test_response(ref_text):
-    llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.3)
-    # Combined prompt template for summarization and evaluation
-    combined_textbook = '''
-    situation : {situation}
+    prompt = f"""
+    situation : {ref_text}
     당신은 일반적인 사회 통념 관점에서 대화의 요약과 판결을 제공하는 중재자 판사입니다.
     다음 situation의 내용의 대화를 검토하고 모든 정보를 세부적으로 평가하여 아래에 요청된 정보들을 작성하세요.
     1. "title"
@@ -77,16 +64,22 @@ def test_response(ref_text):
       "summary_ai": "상황 요약문(AI)",
       "judgement": "판결문",
       "fault_rate": 57.8''
-      "title": "사건 제목 (대화의 주제를 반영)}} ]
-    '''
-    prompt = ChatPromptTemplate.from_template(combined_textbook)
+      "title": "사건 제목 (대화의 주제를 반영)}}
+                                            
+    """
 
-    chain = prompt | llm | StrOutputParser()
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3
+        )
+        # 응답에서 내용 추출
+        content = response["choices"][0]["message"]["content"]
 
-    response = chain.invoke({
-        'situation': ref_text
-    })
-    cleaned_data = response.replace('json', '').replace('```', '').strip()
-    situations = json.loads(cleaned_data)
-
-    return situations
+        # JSON 디코딩 시도
+        return json.loads(content)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"응답 JSON 디코딩 실패: {e}")
+    except Exception as e:
+        raise RuntimeError(f"GPT 응답 처리 중 오류: {e}")

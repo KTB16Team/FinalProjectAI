@@ -4,7 +4,6 @@ from api.endpoint.mediation_service import router as mediation_router
 from core.config import settings
 app = FastAPI(title=settings.PROJECT_NAME)
 
-# mediation_router를 포함
 app.include_router(mediation_router, prefix="/api/v1/private-posts")
 
 if __name__ == "__main__":
