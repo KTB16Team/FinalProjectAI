@@ -82,18 +82,20 @@ import boto3
 import tempfile
 from urllib.parse import urlparse, unquote
 from botocore.exceptions import ClientError
-
+from core.config import settings
 def parse_s3_url(url):
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc.split(".")[0]
-    object_key = unquote(parsed_url.path.lstrip("/"))
+    # URL 디코딩 및 '+'를 공백으로 변환
+    object_key = unquote(parsed_url.path.lstrip("/")).replace("+", " ")
     return bucket_name, object_key
 
-def download_s3_file(url, download_dir="app/temp"):
+def download_s3_file(url, download_dir="temp"):
     # 다운로드 디렉토리 설정
     os.makedirs(download_dir, exist_ok=True)  # 디렉토리가 없으면 생성
 
     bucket_name, object_key = parse_s3_url(url)
+    print(f"bucket: {bucket_name}, key: {object_key}")
 
     s3_client = boto3.client(
         "s3",
@@ -104,13 +106,15 @@ def download_s3_file(url, download_dir="app/temp"):
 
     try:
         # 객체 존재 확인
-        s3_client.head_object(Bucket=settings.AWS_S3_BUCKET_NAME, Key="audio/스크린샷 2024-11-27 213534.png")
+        s3_client.head_object(Bucket=settings.AWS_S3_BUCKET_NAME, Key=object_key)
         print(f"Object '{object_key}' exists. Proceeding with download...")
 
         # 로컬 파일 경로 생성
-        local_file_path = os.path.join(download_dir, os.path.basename(object_key))
+        file_name = os.path.basename(object_key)
+        local_file_path = os.path.join(download_dir, file_name)
 
         # 파일 다운로드
+        print(f"Downloading from bucket: {bucket_name}, key: {object_key}")
         s3_client.download_file(bucket_name, object_key, local_file_path)
         print(f"File downloaded to: {local_file_path}")
         return local_file_path
@@ -123,6 +127,7 @@ def download_s3_file(url, download_dir="app/temp"):
     except Exception as e:
         print(f"General error: {e}")
         raise
+
 
 
     # 사용 예제

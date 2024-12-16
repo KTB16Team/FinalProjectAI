@@ -3,11 +3,12 @@ import os
 import ssl
 from fastapi import APIRouter, HTTPException, Header, status, BackgroundTasks
 import httpx
+from botocore.exceptions import ClientError
 from sqlalchemy import text
 from datetime import datetime
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
-from services.STT import download_s3_file
+from services.audio_process import process_audio_file
 from core.logging import setup_logger
 from core.config import settings
 import requests
@@ -25,36 +26,35 @@ analyzer = RelationshipAnalyzer()
 async def get_voice(request: STTRequest):
     logger.info("get_infos start")
     logger.info(f"audio URL : {request.url}")
-    download_s3_file(request.url)
-    logger.info(f"download_file_from_s3")
-    # if not request.url:
-    #     raise HTTPException(status_code=400, detail="URL_NOT_PROVIDED")
-    #
-    # try:
-    #     entities = S3SttService.download_file_from_s3(request.url)
-    #     logger.info(f"download_file_from_s3")
-    #     if "ai_stt" not in entities:
-    #         logger.error("STT model did not return expected field: ai_stt")
-    #         raise HTTPException(status_code=422, detail="STT_DATA_MISSING")
-    # except httpx.HTTPStatusError as e:
-    #     logger.error(f"HTTP error during STT processing: {e}")
-    #     raise HTTPException(status_code=502, detail="STT_HTTP_ERROR")
-    # except httpx.ConnectError as e:
-    #     logger.error(f"Connection error during STT processing: {e}")
-    #     raise HTTPException(status_code=503, detail="STT_CONNECTION_ERROR")
-    # except Exception as e:
-    #     logger.error(f"General STT processing error: {e}")
-    #     raise HTTPException(status_code=500, detail="STT_PROCESSING_ERROR")
 
-    # response = VoiceInfo(
-    #     status="Created",
-    #     timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    #     data=DataInfoSTT(
-    #         script=entities.get("ai_stt")
-    #     )
-    # )
-    # logger.info(f"response : {response}")
-    return
+    if not request.url:
+        raise HTTPException(status_code=400, detail="URL_NOT_PROVIDED")
+
+    try:
+        # 비동기 처리로 S3에서 음성 파일 다운로드 및 텍스트 변환
+        transcription = await process_audio_file(request.url)
+        logger.info("STT processing completed successfully.")
+    except ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            logger.error("File not found in S3.")
+            raise HTTPException(status_code=404, detail="FILE_NOT_FOUND_IN_S3")
+        else:
+            logger.error(f"Unexpected S3 error: {e}")
+            raise HTTPException(status_code=500, detail="S3_ERROR")
+    except Exception as e:
+        logger.error(f"General STT processing error: {e}")
+        raise HTTPException(status_code=500, detail="STT_PROCESSING_ERROR")
+
+    # 응답 생성
+    response = VoiceInfo(
+        status="Created",
+        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        data=DataInfoSTT(
+            script=transcription
+        )
+    )
+    logger.info(f"Response: {response}")
+    return response
 
 # @router.post("/judgement", response_model=DataInfoSummary, status_code=201)
 # async def process_judge(request: JudgeRequest):

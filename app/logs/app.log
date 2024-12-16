@@ -130,3 +130,52 @@
 2024-12-17 03:06:34,451 - my_fastapi_app - INFO - get_infos start
 2024-12-17 03:06:34,452 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
 2024-12-17 03:06:34,935 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:15:02,910 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:15:06,856 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:15:07,860 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:15:08,644 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:16:01,421 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:16:11,111 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:16:12,121 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:16:12,553 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:17:47,168 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:17:51,089 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:17:52,101 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:19:00,253 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:19:00,309 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:19:01,263 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:19:02,758 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:20:39,393 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:20:49,036 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:20:50,050 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:20:50,506 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:21:51,053 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:21:52,064 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:25:15,654 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:25:27,572 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:25:28,579 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:26:07,025 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:26:11,988 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:26:13,000 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:28:09,426 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:28:09,536 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:28:10,440 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:28:11,895 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:57:39,382 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:57:40,395 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:57:40,908 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:58:48,896 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:58:49,906 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/mango.m4a
+2024-12-17 03:58:50,481 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 04:12:53,946 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 04:12:59,934 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:13:00,946 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/mango.m4a
+2024-12-17 04:13:05,794 - my_fastapi_app - ERROR - General STT processing error: Error code: 400 - {'error': {'message': "Unrecognized file format. Supported formats: ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']", 'type': 'invalid_request_error', 'param': None, 'code': None}}
+2024-12-17 04:17:36,782 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 04:17:47,365 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:17:48,373 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/mango.m4a
+2024-12-17 04:17:51,167 - my_fastapi_app - ERROR - General STT processing error: Error code: 400 - {'error': {'message': "Invalid file format. Supported formats: ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']", 'type': 'invalid_request_error', 'param': None, 'code': None}}
+2024-12-17 04:19:07,426 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:19:08,434 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/SttTest.m4a
+2024-12-17 04:19:17,275 - my_fastapi_app - INFO - STT processing completed successfully.
+2024-12-17 04:19:18,279 - my_fastapi_app - INFO - Response: status='Created' timestamp=datetime.datetime(2024, 12, 17, 4, 19, 18) data=DataInfoSTT(script='그 다음에 무슨 이미지를 쓰던지 상관이 없고, 4번 문제 같은 경우엔 밈 필터링과 메디안 필터링이 왜 가우시한 노이즈를 제거하는데 좋은지 각각 설명을 하면 되고 그 다음에 박스 필터, 메디안 필터를 구현을 하면 됩니다. 그리고 각각 다양한 사이즈랑 윈도우 사이즈로 비교를 해보시고 그 다음에 특히 메디안 필터를 구현할 때는 실제로 솔텐페퍼 노이즈를 적용을 한 다음에 실제로 이게 정말 잘 지워지는지 그걸 한번 체크를 해보세요. 이런식으로 보여주면 됩니다. 이런식으로 노이즈를 주입했지만 스무딩은 이렇게 남아있지만 필터링된건 깔끔해지죠. 이런식으로 보여주면 됩니다. 그 다음에 이건 아까 3장에서 이미지 샤프닝과 라플라시안 필터를 좀 다르게 했을 때 비교를 해보라는 거고 6번 같은 경우에는 실제로 프리에 트랜스폼을 수식으로 해보는 것. B 같은 경우는 컨볼러션 띄어렘 증명하는 것. 그 다음에 1D 샘플링 띄어렘 했었지. 샘플링 띄어렘이 뭔지 그 다음에 2D 샘플링 띄어렘이 또 뭔지만 쓰면 되고 그 다음에 특히 1D 샘플링 띄어렘 같은 경우에는 왜 항상 나이트퀴스트 레이트보다 높은 샘플링 레이트를 가져야 이게 완벽 복원이 가능한지를 예시로 들어서 설명해 주면 됩니다. 굳이 매트미티컬하게 쓸 필요는 없어요. 예시만 들어주면 됩니다. 참고로 이 예시는 책에 있어요. 그 다음에 LPF가 스파셜 도메인에서의 민필터링과 비슷하다는 것을 인정하냐. 인정한다면 그 이유를 작성하지. 그 다음에 이런 다양한 필터 종류들이 있는데 그 결과를 해석을 해봐라. 비교를 해봐라. 이런식으로 보여주면 됩니다. 안어렵죠? 이게 다 책에 있는 거예요. 책에서 다 찾아보면 다 나오는 거라서. 그래서 쉬워요. 진짜로. 그래서 이거를 다음 주 금요일까지 해보면 될 것 같습니다. 8일이죠?')
