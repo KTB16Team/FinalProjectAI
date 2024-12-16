@@ -9,7 +9,7 @@ class S3SttService:
         stt_service = S3SttService(
             aws_access_key_id=settings.AWS_ACCESS_KEY,
             aws_secret_access_key=settings.AWS_SECRET_KEY,
-            bucket_name = AWS_S3_BUCKET_NAME,
+            bucket_name = settings.AWS_S3_BUCKET_NAME,
             region_name=settings.AWS_REGION,
             openai_api_key=settings.OPENAI_API_KEY,
         )

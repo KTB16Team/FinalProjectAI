@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     AWS_REGION: str = ""
     AWS_ACCESS_KEY: str = ""
     AWS_SECRET_KEY: str = ""
-
+    #logstash
+    LOGSTASH_HOST: str = ""
     class Config:
         env_file = ".env"
 

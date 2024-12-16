@@ -5,20 +5,19 @@ from fastapi import APIRouter, HTTPException, Header, status, BackgroundTasks
 import httpx
 from sqlalchemy import text
 from datetime import datetime
-# from app.db.database import engine
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 from services.STT import S3SttService
-import logging
+from core.logging import setup_logger
 from core.config import settings
-from services.emotion_behavior_situation import RelationshipAnalyzer
 import requests
 import uuid
 import pika
-import redis
-from app.services.emotion_behavior_situation import RelationshipAnalyzer
+# import redis
+from services.emotion_behavior_situation import RelationshipAnalyzer
 router = APIRouter()
-logger = logging.getLogger("uvicorn")
+# logger = logging.getLogger("uvicorn")
+logger = setup_logger()
 
 analyzer = RelationshipAnalyzer()
 
@@ -178,8 +177,8 @@ async def get_voice(request: STTRequest):
 # #########
 #임시 비동기
 ######
-CALLBACK_URL = os.getenv('CALLBACK_URL')
-ACCESSTOKEN = os.getenv('ACCESSTOKEN')
+CALLBACK_URL = settings.CALLBACK_URL
+ACCESSTOKEN = settings.ACCESSTOKEN
 # Mock test_response 함수
 # def test_response(content: str):
 #     """AI 모델 모의 처리"""
@@ -194,70 +193,70 @@ ACCESSTOKEN = os.getenv('ACCESSTOKEN')
 #     }
 
 # 백그라운드 작업 함수
-def execute_test_response_and_callback(content: str, id:int):
-    """
-    test_response 호출 후 결과를 CALLBACK_URL로 전송
-    """
-    try:
-        # test_response 실행
-        logger.info("Executing test_response function...")
-        entities = test_response(content)
-
-        # 필수 필드 검증
-        required_fields = [
-            "title", "stance_plaintiff", "stance_defendant",
-            "situation_summary", "judgement", "fault_rate"
-        ]
-        missing_fields = [field for field in required_fields if field not in entities]
-
-        if missing_fields:
-            logger.error(f"Missing fields in GPT response: {missing_fields}")
-            callback_response = {
-                "status": False,
-                "id": id
-            }
-        else:
-            callback_response = {
-                "status": True,
-                "accesstoken": ACCESSTOKEN,
-                "id": id,
-                "title": entities.get("title"),
-                "stancePlaintiff": entities.get("stance_plaintiff"),
-                "stanceDefendant": entities.get("stance_defendant"),
-                "summaryAi": entities.get("situation_summary"),
-                "judgement": entities.get("judgement"),
-                "faultRate": entities.get("fault_rate")
-            }
-
-        # POST 결과를 CALLBACK_URL로 전송
-        logger.info(f"Sending POST request to CALLBACK_URL: {CALLBACK_URL}")
-        response = requests.post(CALLBACK_URL, json=callback_response)
-        logger.info(f"Callback response: {response.status_code}, {response.text}")
-
-    except Exception as e:
-        logger.error(f"Error during processing: {e}")
-        # 실패한 경우 콜백 URL로 에러 메시지 전송
-        error_response = {"status": "error", "message": str(e)}
-        requests.post(CALLBACK_URL, json=error_response)
+# def execute_test_response_and_callback(content: str, id:int):
+#     """
+#     test_response 호출 후 결과를 CALLBACK_URL로 전송
+#     """
+#     try:
+#         # test_response 실행
+#         logger.info("Executing test_response function...")
+#         entities = test_response(content)
+#
+#         # 필수 필드 검증
+#         required_fields = [
+#             "title", "stance_plaintiff", "stance_defendant",
+#             "situation_summary", "judgement", "fault_rate"
+#         ]
+#         missing_fields = [field for field in required_fields if field not in entities]
+#
+#         if missing_fields:
+#             logger.error(f"Missing fields in GPT response: {missing_fields}")
+#             callback_response = {
+#                 "status": False,
+#                 "id": id
+#             }
+#         else:
+#             callback_response = {
+#                 "status": True,
+#                 "accesstoken": ACCESSTOKEN,
+#                 "id": id,
+#                 "title": entities.get("title"),
+#                 "stancePlaintiff": entities.get("stance_plaintiff"),
+#                 "stanceDefendant": entities.get("stance_defendant"),
+#                 "summaryAi": entities.get("situation_summary"),
+#                 "judgement": entities.get("judgement"),
+#                 "faultRate": entities.get("fault_rate")
+#             }
+#
+#         # POST 결과를 CALLBACK_URL로 전송
+#         logger.info(f"Sending POST request to CALLBACK_URL: {CALLBACK_URL}")
+#         response = requests.post(CALLBACK_URL, json=callback_response)
+#         logger.info(f"Callback response: {response.status_code}, {response.text}")
+#
+#     except Exception as e:
+#         logger.error(f"Error during processing: {e}")
+#         # 실패한 경우 콜백 URL로 에러 메시지 전송
+#         error_response = {"status": "error", "message": str(e)}
+#         requests.post(CALLBACK_URL, json=error_response)
 #####
 # 기존 비동기 로직
-# @router.post("/judgement", status_code=202)
-# async def process_judge(request: JudgeRequest, background_tasks: BackgroundTasks):
-#     """
-#     요청을 수락하고 202 응답을 반환.
-#     BackgroundTasks를 이용해 test_response 호출 후 결과를 CALLBACK_URL로 POST 전송.
-#     """
-#     logger.info(f"Received request data: {request.dict()}")
-#
-#     if not request.content:
-#         raise HTTPException(status_code=400, detail="CONTENT_NOT_PROVIDED")
-#
-#     # Background 작업 등록
-#     logger.info("Starting background task for judgement processing...")
-#     background_tasks.add_task(execute_test_response_and_callback, request.content, request.id)
-#
-#     # 202 Accepted 응답 반환
-#     return {"status": "accepted", "message": "Judgement processing started."}
+@router.post("/judgement", status_code=202)
+async def process_judge(request: JudgeRequest, background_tasks: BackgroundTasks):
+    """
+    요청을 수락하고 202 응답을 반환.
+    BackgroundTasks를 이용해 test_response 호출 후 결과를 CALLBACK_URL로 POST 전송.
+    """
+    logger.info(f"Received request data: {request.dict()}")
+
+    if not request.content:
+        raise HTTPException(status_code=400, detail="CONTENT_NOT_PROVIDED")
+
+    # Background 작업 등록
+    logger.info("Starting background task for judgement processing...")
+    background_tasks.add_task(execute_test_response_and_callback, request.content, request.id)
+
+    # 202 Accepted 응답 반환
+    return {"status": "accepted", "message": "Judgement processing started."}
 
 ########
 #MQ
@@ -286,7 +285,7 @@ def execute_test_response_and_callback(content: str, id: int):
         else:
             DataInfoSummary = {
                 "status": True,
-                "accesstoken": ACCESSTOKEN,
+                "accessKey": ACCESSTOKEN,
                 "id": id,
                 "title": entities.get("title"),
                 "stancePlaintiff": entities.get("stance_plaintiff"),
@@ -297,8 +296,9 @@ def execute_test_response_and_callback(content: str, id: int):
             }
 
         # POST 결과를 CALLBACK_URL로 전송
+        logger.info(f"Sending POST request to DataInfoSummary: {DataInfoSummary}")
         logger.info(f"Sending POST request to CALLBACK_URL: {CALLBACK_URL}")
-        response = requests.post(CALLBACK_URL, json=callback_response)
+        response = requests.post(CALLBACK_URL, json=DataInfoSummary)
         logger.info(f"Callback response: {response.status_code}, {response.text}")
 
     except Exception as e:
@@ -313,7 +313,11 @@ def process_message(ch, method, properties, body):
     """
     try:
         # 메시지 디코딩 및 파싱
-        message = json.loads(body)
+        decoded_body = body.decode('utf-8')
+        logger.info(f"Received message: {decoded_body}")
+        # 메시지 처리 로직 추가
+        ch.basic_ack(delivery_tag=method.delivery_tag)  # 메시지 확인
+        message = json.loads(decoded_body)
         content = message.get("content")
         request_id = message.get("id")
 
@@ -330,23 +334,25 @@ def process_message(ch, method, properties, body):
     except Exception as e:
         logger.error(f"Error processing message: {e}")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # 실패 메시지 재시도 방지
+
 port = 5671
-vhost = "/"
-rabbitmq_url = f"amqps://{settings.RABBITMQ_URL}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_URL}:{port}"
+# vhost = "/"
+rabbitmq_url = f"amqps://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_URL}:{port}"
+
 def start_worker():
     """
     RabbitMQ 워커 시작
     """
     try:
-        # SSL 컨텍스트 설정 (SSL 인증서 검증 비활성화)
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        context.check_hostname = True  # 호스트 이름 검증 비활성화
-        # context.verify_mode = ssl.CERT_NONE  # 인증서 검증 비활성화
+        # SSL 컨텍스트 설정
+        ssl_context = ssl.create_default_context()  # 기본 SSL 설정
+        ssl_context.verify_mode = ssl.CERT_REQUIRED  # 서버 인증서 검증
+        ssl_context.check_hostname = True  # 호스트 이름 검증 활성화
+        ssl_context.load_default_certs()  # 기본 신뢰 인증서 로드
 
         # RabbitMQ 연결 설정
-        url = rabbitmq_url # 설정에서 RabbitMQ URL 가져오기
-        params = pika.URLParameters(url)
-        params.ssl_options = pika.SSLOptions(context)
+        params = pika.URLParameters(rabbitmq_url)  # 설정에서 RabbitMQ URL 가져오기
+        params.ssl_options = pika.SSLOptions(ssl_context)  # SSL 옵션 설정
 
         connection = pika.BlockingConnection(params)  # RabbitMQ 연결
         channel = connection.channel()
@@ -372,10 +378,11 @@ def start_worker():
     except Exception as e:
         logger.error(f"알 수 없는 오류 발생: {e}")
 
-def process_message(ch, method, properties, body):
-    """
-    메시지 처리 콜백 함수
-    """
-    logger.info(f"Received message: {body}")
-    # 메시지 처리 로직 추가
-    ch.basic_ack(delivery_tag=method.delivery_tag)  # 메시지 확인
+# def process_message(ch, method, properties, body):
+#     """
+#     메시지 처리 콜백 함수
+#     """
+#     decoded_body = body.decode('utf-8')
+#     logger.info(f"Received message: {decoded_body}")
+#     # 메시지 처리 로직 추가
+#     ch.basic_ack(delivery_tag=method.delivery_tag)  # 메시지 확인

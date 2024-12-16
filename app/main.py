@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from api.endpoint.mediation_service import router as mediation_router
+from api.endpoint.prometheus import router as prometheus_router
 from core.config import settings
 import asyncio
 import threading
@@ -9,7 +10,7 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 # mediation_router를 포함
 app.include_router(mediation_router, prefix="/api/v1/private-posts")
-
+app.include_router(prometheus_router, prefix="")
 def run_worker_in_thread():
     """
     RabbitMQ 워커를 별도 스레드에서 실행
