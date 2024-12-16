@@ -7,11 +7,13 @@ from datetime import datetime
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 import logging
+from services.emotion_behavior_situation import RelationshipAnalyzer
+from services.test_behavior_classification import behavior_classification_test
 # from app.services.emotion_behavior_situation import RelationshipAnalyzer
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
-# analyzer = RelationshipAnalyzer()
+analyzer = RelationshipAnalyzer()
 
 @router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
 async def get_voice(request: STTRequest):
@@ -55,10 +57,10 @@ async def process_judge(request: JudgeRequest):
         raise HTTPException(status_code=400, detail="CONTENT_NOT_PROVIDED")
 
     try:
-        entities = test_response(request.content)
-        # entities = situation_summary_GPT(request.content)
-        required_fields = ["title", "stance_plaintiff", "stance_defendant", "situation_summary", "judgement", "fault_rate"]
-        # required_fields = ["situation_summary", "judgement", "fault_ratios"]
+        # entities = test_response(request.content)
+        entities = await situation_summary_GPT(request.content)
+        # required_fields = ["title", "stance_plaintiff", "stance_defendant", "situation_summary", "judgement", "fault_rate"]
+        required_fields = ["situation_summary", "judgement", "fault_ratios"]
         # missing_fields = [field for field in required_fields if field not in entities]
         missing_fields = [field for field in required_fields if field not in entities]
         if missing_fields:
@@ -71,23 +73,23 @@ async def process_judge(request: JudgeRequest):
         logger.error(f"General error during GPT processing: {e}")
         raise HTTPException(status_code=500, detail="GPT_PROCESSING_ERROR")
 
-    # response = DataInfoSummary(
-    #     title=entities["situation_summary"]["title"],
-    #     stancePlaintiff=entities["judgement"]["A_position"],
-    #     stanceDefendant=entities["judgement"]["B_position"],
-    #     summaryAi=entities["situation_summary"]["situation_summary"],
-    #     judgement=entities["judgement"]["conclusion"],
-    #     faultRate=f"A: {entities['fault_ratios']['A']*100:.2f}%, B: {entities['fault_ratios']['B']*100:.2f}%"
-    #     )
-    
     response = DataInfoSummary(
-        title=entities.get("title"),
-        stancePlaintiff=entities.get("stance_plaintiff"),
-        stanceDefendant=entities.get("stance_defendant"),
-        summaryAi=entities.get("situation_summary"),
-        judgement=entities.get("judgement"),
-        faultRate=entities.get("fault_rate")
-    )
+        title=entities["situation_summary"]["title"],
+        stancePlaintiff=entities["judgement"]["A_position"],
+        stanceDefendant=entities["judgement"]["B_position"],
+        summaryAi=entities["situation_summary"]["situation_summary"],
+        judgement=entities["judgement"]["conclusion"],
+        faultRate = f"{entities['fault_ratios']['A'] * 100:.2f}"
+        )
+    
+    # response = DataInfoSummary(
+    #     title=entities.get("title"),
+    #     stancePlaintiff=entities.get("stance_plaintiff"),
+    #     stanceDefendant=entities.get("stance_defendant"),
+    #     summaryAi=entities.get("situation_summary"),
+    #     judgement=entities.get("judgement"),
+    #     faultRate=entities.get("fault_rate")
+    # )
     logger.info("Finished judge processing")
     logger.info(f"판결 응답: {response}")
     return response
@@ -99,3 +101,10 @@ async def process_judge(request: JudgeRequest):
 #         result = await conn.execute(query)
 #         user_info = [row[0] for row in result.fetchall()]
 #     return user_info
+
+@router.post("/temp_test", response_model=DataInfoSummary, status_code=201)
+def init_model():
+    test_text = "프로젝트 진행 상황이 많이 늦어지고 있어요. 이대로 가다가는 기한 내에 끝내기 힘들 것 같은데, 어떻게 생각하세요?"
+    result = behavior_classification_test(test_text)
+    print("\n테스트 결과:", result)
+    return result

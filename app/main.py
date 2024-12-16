@@ -2,8 +2,6 @@ from fastapi import FastAPI
 
 from api.endpoint.mediation_service import router as mediation_router
 from core.config import settings
-
-
 app = FastAPI(title=settings.PROJECT_NAME)
 
 # mediation_router를 포함

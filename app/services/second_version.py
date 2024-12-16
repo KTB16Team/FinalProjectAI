@@ -8,7 +8,81 @@ from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 import time
+from transformers import BertTokenizer, BertForSequenceClassification
+import torch
+import whisper
+from openai import OpenAI
 
+class AudioTranscriber:
+    def __init__(self, api_key: str = None):
+        """오디오 변환기 초기화"""
+        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+        self.client = OpenAI(api_key=self.api_key)
+
+    async def transcribe_audio(self, audio_file_path: str, use_api: bool = True) -> str:
+        """
+        오디오 파일을 텍스트로 변환
+        
+        Args:
+            audio_file_path (str): 오디오 파일 경로
+            use_api (bool): True면 Whisper API 사용, False면 로컬 모델 사용
+            
+        Returns:
+            str: 변환된 텍스트
+        """
+        try:
+            if use_api:
+                with open(audio_file_path, "rb") as audio_file:
+                    transcript = self.client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file,
+                        language="ko"
+                    )
+                return transcript.text
+            else:
+                model = whisper.load_model("base")
+                result = model.transcribe(audio_file_path, language="ko")
+                return result["text"]
+                
+        except Exception as e:
+            print(f"Transcription error: {str(e)}")
+            raise
+        
+class BehaviorClassifier:
+    def __init__(self, model_path: str="bert-base-multilingual-cased"):
+        try:
+            self.tokenizer = BertTokenizer.from_pretrained(model_path)
+            self.model = BertForSequenceClassification.from_pretrained(model_path, num_labels=6)
+            self.confidence_threshold = 0.5 #신뢰도 임계값 추가하여 개선
+
+        except Exception as e:
+            print(f"Error loading model: {str(e)}")
+            raise
+
+    def classify(self, texts: List[str]) -> List[str]:
+        inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
+
+        with torch.no_grad():
+            outputs= self.model(**inputs)
+            probabilities= torch.softmax(outputs.logits, dim=1)
+            confidence, predictions = torch.max(probabilities, dim=1)
+        
+            behavior_categories = ["공격적", "방어적", "회피적","수용적", "타협적", "주장적"]
+            results = []
+            for conf, pred, prob in zip(confidence, predictions, probabilities):
+                print(f"Confidence: {conf.item():.4f}")
+                print(f"Prediction: {pred.item()}")
+                print(f"All probabilities: {prob.tolist()}")
+                
+                if conf.item() >= self.confidence_threshold:
+                    results.append(behavior_categories[pred.item()])
+                else:
+                    # 신뢰도가 낮더라도 가장 높은 확률의 카테고리 선택
+                    results.append(behavior_categories[pred.item()])
+                
+            return results
+        # return [behavior_categories[pred] for pred in predictions.tolist()]
+    
 # 스탠스 변화 부분 볼려면 인덱스 필요
 class DialogueLine(BaseModel):
     index: int = Field(description="대화 문장의 인덱스")
@@ -19,7 +93,7 @@ class StanceAction(BaseModel):
     index: int = Field(description="스탠스 변화가 발생한 대화 문장의 인덱스")
     dialogue_text: str = Field(description="해당 대화 문장")
     party: str = Field(description="대화 참여자 식별자")
-    stance_classification: str = Field(description="태도 분류 (aggressive/defensive/avoidant/accepting 등)")
+    stance_classification: Optional[str] = Field(description="스탠스 분류 (공격적, 방어적 등)", default = None)
     score: float = Field(description="""행동의 과실 점수 (0-1):
     - 0에 가까울수록: 책임감 있고 건설적인 행동
     - 1에 가까울수록: 책임회피적이고 파괴적인 행동""")
@@ -63,6 +137,19 @@ class RelationshipAnalyzer:
             api_key=os.getenv('OPENAI_API_KEY')
         )
         self.parser = PydanticOutputParser(pydantic_object=AnalysisResult)
+
+        self.behavior_classifier = BehaviorClassifier(model_path = "bert-base-multilingual-cased")
+        self. transcriber = AudioTranscriber()
+
+    async def analyze_from_audio(self, audio_file_path: str, use_api: bool=True) -> Dict:
+        try:
+            print("오디오 변환 시작...")
+            transcribed_text = await self.transcriber.transcribe_audio(audio_file_path, use_api)
+            print("오디오 변환 완료. 분석 시작...")
+            return await self.analyze(transcribed_text)
+        except Exception as e:
+            print(f"오디오 분석 오류: {str(e)}")
+            raise
     async def convert_narrative_to_dialogue(self, text: str) -> Dict:
         """
         **고친 부분 1: 서술형 텍스트를 대화형 텍스트로 변환**
@@ -231,16 +318,7 @@ class RelationshipAnalyzer:
                                                          
         For each stance change point:
         1. Identify clear changes in attitude or behavior
-                                                         
-        2. Classify the stance into one of these categories:
-          - Aggressive (공격적): hostile, confrontational
-          - Defensive (방어적): self-justifying, excuse-making
-          - Avoidant (회피적): evasive, withdrawal
-          - Accepting (수용적): understanding, acknowledging
-          - Compromising (타협적): willing to meet halfway
-          - Assertive (주장적): firm but not hostile
-
-        3. Score each behavior (0-1) based on responsibility and fault:
+        2. Score each behavior (0-1) based on responsibility and fault:
           Lower scores (closer to 0):
           * Shows responsibility and accountability
           * Contributes to problem resolution
@@ -262,7 +340,6 @@ class RelationshipAnalyzer:
                     "index": dialogue_line_index,
                     "dialogue_text": "exact text",
                     "party": "speaker",
-                    "stance_classification": "stance type",
                     "score": "behavior_score(0-1)"
                 }}
             ]
@@ -295,6 +372,17 @@ class RelationshipAnalyzer:
                 response_text = response_text[7:]
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
+
+            gpt_results = json.loads(response_text)["stance_actions"]
+            # GPT 결과를 StanceAction 객체로 변환
+            stance_actions = [StanceAction(**action) for action in gpt_results]
+            dialogue_texts = [action.dialogue_text for action in stance_actions]
+            if dialogue_texts:
+                stance_classifications = self.behavior_classifier.classify(dialogue_texts)
+
+                for action, classification in zip(stance_actions, stance_classifications):
+                    action.stance_classification = classification
+            return stance_actions
             # print("Response text:", response.generations[0][0].text)
             # print("Response text:", response)
             # print('errorcheck')
@@ -310,7 +398,24 @@ class RelationshipAnalyzer:
 
         except Exception as e:
             print(f"Stance analysis error: {str(e)}")
+            print(f"Response text: {response_text if 'response_text' in locals() else 'No response'}")
             raise
+
+    async def analyze_behavior_category(self, stance_actions: List[StanceAction]) -> List[StanceAction]:
+        """
+        행동 카테고리 분류를 수행하고 결과를 추가
+        """
+        # 스탠스 변화 문장에서 텍스트 추출
+        texts = [action.dialogue_text for action in stance_actions]
+        
+        # 행동 카테고리 분류
+        behavior_categories = self.behavior_classifier.classify(texts)
+        
+        # 결과를 기존 StanceAction에 추가
+        for action, category in zip(stance_actions, behavior_categories):
+            action.behavior_category = category
+        
+        return stance_actions
 # 감정 점수를 저런식으로 나누는 기준을 애초부터 나눌지 아니면 알아서 판단하라 할지
     async def analyze_emotional_impact(self, dialogue_lines: List[DialogueLine], stance_actions: List[StanceAction]) -> EmotionalAnalysis:
 
@@ -540,19 +645,23 @@ class RelationshipAnalyzer:
             "analysis_timestamp": datetime.now().isoformat()
         }
   
-async def test_analysis():
+async def test_audio_analysis():
+# async def test_analysis():
     start_time = time.time()
     test_data = """
     민수가 팀프로젝트 발표 중에 PPT가 안 넘어가자 화를 냈어. 지원이랑 영호는 민수를 진정시키려 했는데, 서연이는 오히려 민수한테 '네가 미리 점검했어야지'라면서 불편한 말을 했어.
     """
+    test_audio_file = ""
 
     analyzer = RelationshipAnalyzer()
     
     try:
-        print("분석 시작...")
-        result = await analyzer.analyze(test_data)
+        print("오디오 분석 시작...")
+        result = await analyzer.analyze_from_audio(test_audio_file)
+        # print("분석 시작...")
+        # result = await analyzer.analyze(test_data)
 
-        print("\n대화 라인:")
+        print("\n===대화 라인===")
         for line in result["dialogue_lines"]:
             print(f"{line['index']}. {line['speaker']}: {line['text']}")
         
@@ -560,10 +669,10 @@ async def test_analysis():
         print(result["situation_summary"]["title"])
 
         situation_summary = result["situation_summary"]
-        print("\n상황 요약:")
+        print("\n===상황 요약===")
         print(f"{situation_summary['situation_summary']}")
         
-        print("\n상황 케이스들:")
+        print("\n===상황 케이스들===")
         for case in situation_summary["cases"]:
             print(f"- 이벤트: {case['event']}")
             print(f"  참여자: {case['participants']}")
@@ -571,42 +680,42 @@ async def test_analysis():
             print(f"  시간 프레임: {case['time_frame']}")
             print(f"  상황 점수: {case['score']}\n")
 
-        print("\n스탠스 변화 지점:")
+        print("\n===스탠스 변화 지점===")
         for action in result["stance_actions"]:
             print(f"\n액션 인덱스 {action['index']}:")
             print(f"액션 내용: {action['dialogue_text']}")
             print(f"변화 주체: {action['party']}")
-            print(f"태도 분류: {action['stance_classification']}")
+            print(f"태도 분류 (BERT): {action['stance_classification']}")
             print(f"행동 평가 점수: {action['score']}")
         
-        print("\n감정 영향 분석:")
+        print("\n===감정 영향 분석===")
         emotional = result["emotional_analysis"]
         
-        print("\nA가 B에게 미친 영향:")
+        print("\n===A가 B에게 미친 영향===")
         a_to_b = emotional["a_to_b_impact"]
         print(f"영향 점수: {a_to_b['impact_score']}")
         print(f"감정 상태: {', '.join(a_to_b['emotional_state'])}")
         print(f"영향 설명: {a_to_b['impact_description']}")
         print(f"관련 대화 인덱스: {a_to_b['relevant_dialogue_indices']}")
         
-        print("\nB가 A에게 미친 영향:")
+        print("\n===B가 A에게 미친 영향===")
         b_to_a = emotional["b_to_a_impact"]
         print(f"영향 점수: {b_to_a['impact_score']}")
         print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
         print(f"영향 설명: b_to_a['impact_description']")
         print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
 
-        print("\n과실 비율:")
+        print("\n===과실 비율===")
         print(f"A의 과실 비율: {result['fault_ratios'] * 100:.2f}%")
 
-        print("\n판결문:")
-        print("\nA측 입장:")
+        print("\n===판결문===")
+        print("\n===A측 입장===")
         print(result["judgement"]["A_position"])
 
-        print("\nB측 입장:")
+        print("\n===B측 입장===")
         print(result["judgement"]["B_position"])
 
-        print("\n결론:")
+        print("\n===결론===")
         print(result["judgement"]["conclusion"])
 
         end_time = time.time()
@@ -620,4 +729,4 @@ async def test_analysis():
         raise
 
 if __name__ == "__main__":
-    asyncio.run(test_analysis())
+    asyncio.run(test_audio_analysis())
