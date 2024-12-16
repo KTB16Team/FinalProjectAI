@@ -16,14 +16,17 @@ async def transcribe_audio(file_path):
         raise
 
 async def process_audio_file(url):
+    temp_file_path = None  # 초기화
     try:
         # 임시 파일 다운로드
         temp_file_path = await download_s3_file(url)
         # 음성 파일 변환
         transcription = await transcribe_audio(temp_file_path)
-        # 임시 파일 삭제
-        os.unlink(temp_file_path)
         return transcription
     except Exception as e:
         print(f"Error processing audio file: {e}")
         raise
+    finally:
+        # 임시 파일 삭제
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
