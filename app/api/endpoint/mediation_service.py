@@ -9,6 +9,7 @@ from datetime import datetime
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 from services.audio_process import process_audio_file
+from services.image_process import process_image_file
 from core.logging import setup_logger
 from core.config import settings
 import requests
@@ -56,6 +57,41 @@ async def get_voice(request: STTRequest):
     logger.info(f"Response: {response}")
     return response
 
+@router.post("/image-to-text", response_model=VoiceInfo, status_code=201)
+async def get_image(request: STTRequest):
+    logger.info("get_infos start")
+    logger.info(f"image URL : {request.url}")
+
+    if not request.url:
+        raise HTTPException(status_code=400, detail="URL_NOT_PROVIDED")
+
+    try:
+        # 비동기 처리로 S3에서 음성 파일 다운로드 및 텍스트 변환
+        transcription = await process_image_file(request.url)
+        logger.info(transcription)
+        logger.info("OCR processing completed successfully.")
+    except ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            logger.error("File not found in S3.")
+            raise HTTPException(status_code=404, detail="FILE_NOT_FOUND_IN_S3")
+        else:
+            logger.error(f"Unexpected S3 error: {e}")
+            raise HTTPException(status_code=500, detail="S3_ERROR")
+    except Exception as e:
+        logger.error(f"General OCR processing error: {e}")
+        raise HTTPException(status_code=500, detail="OCR_PROCESSING_ERROR")
+
+    # 응답 생성
+    response = VoiceInfo(
+        status="Created",
+        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        data=DataInfoSTT(
+            script=transcription
+        )
+    )
+    logger.info(f"Response: {response}")
+    return response
+#동기식 함수
 # @router.post("/judgement", response_model=DataInfoSummary, status_code=201)
 # async def process_judge(request: JudgeRequest):
 #     logger.info(f"Received request data: {request.dict()}")
