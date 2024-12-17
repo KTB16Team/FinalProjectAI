@@ -204,7 +204,8 @@ class DialogueDataset(Dataset):
                 
         # 텐서로 변환
         utterance_vectors = torch.stack(encoded_texts)
-        speaker_ids = torch.tensor(speaker_ids)
+        speaker_ids = torch.tensor(speaker_ids).unsqueeze(0)
+        speaker_ids = speaker_ids.expand(utterance_vectors.size(0), -1)
         empathy_scores = torch.tensor(empathy_scores)
         
         return utterance_vectors, speaker_ids, empathy_scores

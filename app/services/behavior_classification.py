@@ -474,6 +474,18 @@ def classify_text(model, tokenizer, text, device, label_map):
 
     return reverse_label_map[predictions], confidence
 
+
+def map_category_score(category):
+    """카테고리별 점수를 매핑"""
+    score_map = {
+        "경쟁": 0,
+        "회피": 0,
+        "타협": 0.5,
+        "협력": 1,
+        "수용": 1
+    }
+    return score_map.get(category, 0) 
+
 if __name__ == "__main__":
     torch.manual_seed(42)
     np.random.seed(42)
@@ -527,8 +539,11 @@ if __name__ == "__main__":
     # 모델 테스트
     test_text = "그래 내가 잘못한 거 맞아. 근데 너도 잘못한게 없지는 않잖아."
     prediction, confidence = classify_text(model, tokenizer, test_text, device, label_map)
+    category_score = map_category_score(prediction)
+
     print(f"\n입력 텍스트: {test_text}")
     print(f"예측된 카테고리: {prediction} (확신도: {confidence:.2%})")
+    print(f"카테고리 점수: {category_score}")
     
     print("\n모델 저장 경로:", Config.SAVE_PATH)
     

@@ -7,22 +7,22 @@ import numpy as np
 import json
 import random
 from typing import List, Dict, Tuple
-from googletrans import Translator
+# from googletrans import Translator
 # from konlpy.tag import Okt
 # import nltk
 # from nltk.corpus import wordnet
 
 class TextAugmenter:
     def __init__(self):
-        self.translator = Translator()
+        # self.translator = Translator()
         
-    def back_translation(self, text: str, middle_lang='en') -> str:
-        try:
-            mid_text = self.translator.translate(text, dest=middle_lang).text
-            return self.translator.translate(mid_text, dest='ko').text
-        except:
-            return text
-
+    # def back_translation(self, text: str, middle_lang='en') -> str:
+    #     try:
+    #         mid_text = self.translator.translate(text, dest=middle_lang).text
+    #         return self.translator.translate(mid_text, dest='ko').text
+    #     except:
+    #         return text
+        pass
     def random_insertion(self, text: str, n_words: int = 1) -> str:
         words = text.split()
         for _ in range(n_words):
@@ -174,7 +174,7 @@ class ConversationDataset(Dataset):
 class ContextualEmotionAnalyzer(nn.Module):
     def __init__(self, pretrained_model_name: str = 'bert-base-multilingual-cased'):
         super().__init__()
-        
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.bert = AutoModel.from_pretrained(pretrained_model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name)
         
@@ -205,14 +205,19 @@ class ContextualEmotionAnalyzer(nn.Module):
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, utterance_mask: torch.Tensor=None) -> Tuple[torch.Tensor, torch.Tensor]:
     # 입력 차원 처리
         if len(input_ids.shape) == 2:  # [batch_size, seq_length]
-            batch_size = 1
-            seq_length = len(utterance_mask)
-            max_length = input_ids.size(1)
-            # 차원 추가: [1, seq_length, max_length]
-            input_ids = input_ids.unsqueeze(0).view(batch_size, seq_length, max_length)
-            attention_mask = attention_mask.unsqueeze(0).view(batch_size, seq_length, max_length)
+            input_ids = input_ids.unsqueeze(0)
+            attention_mask = attention_mask.unsqueeze(0)
+            if utterance_mask is not None:
+                utterance_mask = utterance_mask.unsqueeze(0)
+            batch_size, seq_length, max_length = input_ids.size()
         else:  # [batch_size, seq_length, max_length]
             batch_size, seq_length, max_length = input_ids.size()
+
+        # 텐서를 디바이스로 이동
+        input_ids = input_ids.to(self.device)
+        attention_mask = attention_mask.to(self.device)
+        if utterance_mask is not None:
+            utterance_mask = utterance_mask.to(self.device)
 
         # BERT 처리를 위해 텐서 평탄화
         flattened_input_ids = input_ids.view(-1, max_length)
@@ -228,59 +233,51 @@ class ContextualEmotionAnalyzer(nn.Module):
         sequence_output = bert_outputs.last_hidden_state[:, 0, :]
         sequence_output = sequence_output.view(batch_size, seq_length, -1)
         
-        # LSTM으로 문맥 정보 처리
-        if utterance_mask is not None:
-            sequence_lengths = utterance_mask.sum(dim=1).long()
-            packed_sequence = nn.utils.rnn.pack_padded_sequence(
-                sequence_output,
-                sequence_lengths.cpu(),
-                batch_first=True,
-                enforce_sorted=False
-            )
-        else:
-            packed_sequence = sequence_output
-        
-        lstm_output, _ = self.context_lstm(packed_sequence)
-        
-        if utterance_mask is not None:
-            lstm_output, _ = nn.utils.rnn.pad_packed_sequence(
-                lstm_output,
-                batch_first=True,
-                total_length=seq_length
-            )
+        try:
+            lstm_output, _ = self.context_lstm(sequence_output)
+        except RuntimeError as e:
+            print(f"LSTM error: {e}")
+            lstm_output = sequence_output
         
         # Attention 가중치 계산
         attention_weights = F.softmax(self.attention(lstm_output), dim=1)
         if utterance_mask is not None:
-            attention_weights = attention_weights.masked_fill(
-                utterance_mask.unsqueeze(-1) == 0,
-                0.0
-            )
+            mask = utterance_mask.unsqueeze(-1).bool()
+            attention_weights = attention_weights.masked_fill(~mask, 0.0)
+            # Renormalize attention weights
+            attention_weights = attention_weights / (attention_weights.sum(dim=1, keepdim=True) + 1e-9)
+        
+    # Ensure correct dimensions for batch matrix multiplication
+        attention_weights = attention_weights.view(batch_size, seq_length, 1)
+        lstm_output = lstm_output.view(batch_size, seq_length, self.hidden_size)
+    
         
         # 문맥을 고려한 출력 생성
         attended_output = torch.bmm(attention_weights.transpose(1, 2), lstm_output)
         attended_output = attended_output.repeat(1, seq_length, 1)
         
-        # 개별 문장 표현과 문맥 정보 결합
+        # Combine features
         combined_output = torch.cat([sequence_output, attended_output], dim=2)
         emotion_scores = self.emotion_classifier(combined_output)
         
         if utterance_mask is not None:
-            emotion_scores = emotion_scores.masked_fill(
-                utterance_mask.unsqueeze(-1) == 0,
-                0.0
-            )
+            emotion_scores = emotion_scores.masked_fill(~mask, 0.0)
         
-        return emotion_scores, attention_weights
+        return emotion_scores, attention_weights.squeeze(-1)
 
 
 class EmotionAnalyzer:
     def __init__(self, model_path: str = None):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = ContextualEmotionAnalyzer().to(self.device)
-        if model_path:
-            self.model.load_state_dict(torch.load(model_path))
+        self.device = torch.device('cpu')
+        self.model = ContextualEmotionAnalyzer()
         self.tokenizer = self.model.tokenizer
+        if model_path:
+            # CPU에 모델을 로드하도록 map_location 설정
+            state_dict = torch.load(model_path, map_location=self.device)
+            self.model.load_state_dict(state_dict)
+        self.model = self.model.to(self.device)
+        self.model.eval()
+        
 
     def _collate_fn(self, batch):
         max_utterances = max(x['input_ids'].size(0) for x in batch)
@@ -316,8 +313,13 @@ class EmotionAnalyzer:
             'utterance_mask': torch.stack(batched['utterance_mask'])
         }
 
+    def save_model(self, save_path: str):
+        """Save the trained model to the specified path."""
+        torch.save(self.model.state_dict(), save_path)
+        print(f"모델이 {save_path}에 저장되었습니다.")
+
     def train(self, train_dataset: ConversationDataset, valid_dataset: ConversationDataset = None,
-              batch_size: int = 16, epochs: int = 10, learning_rate: float = 2e-5):
+              batch_size: int = 16, epochs: int = 10, learning_rate: float = 2e-5, save_path: str = 'emotion_model.pt'):
         train_loader = DataLoader(
             train_dataset, 
             batch_size=batch_size, 
@@ -363,6 +365,9 @@ class EmotionAnalyzer:
             if valid_dataset:
                 valid_loss = self.validate(valid_loader, criterion)
                 print(f'Validation Loss: {valid_loss:.4f}')
+        
+        # Save the model after training
+        self.save_model(save_path)
 
     def validate(self, valid_loader: DataLoader, criterion: nn.Module) -> float:
         self.model.eval()
@@ -386,6 +391,7 @@ class EmotionAnalyzer:
     def analyze_conversation(self, conversation: List[str]) -> List[Dict]:
         self.model.eval()
         
+        # Prepare input tensors
         encodings = self.tokenizer(
             conversation,
             padding=True,
@@ -394,7 +400,8 @@ class EmotionAnalyzer:
             return_tensors='pt'
         ).to(self.device)
         
-        utterance_mask = torch.ones(len(conversation)).to(self.device)
+        # Create utterance mask
+        utterance_mask = torch.ones(1, len(conversation)).to(self.device)
         
         with torch.no_grad():
             emotion_scores, attention_weights = self.model(
@@ -403,8 +410,15 @@ class EmotionAnalyzer:
                 utterance_mask
             )
         
+        # Squeeze the outputs properly
         emotion_scores = emotion_scores.squeeze()
         attention_weights = attention_weights.squeeze()
+        
+        # Handle the case when there's only one utterance
+        if len(conversation) == 1:
+            emotion_scores = emotion_scores.unsqueeze(0)
+            attention_weights = attention_weights.unsqueeze(0)
+        
         results = []
         for i, (text, score) in enumerate(zip(conversation, emotion_scores)):
             emotion_type = self._interpret_score(score.item())
@@ -412,7 +426,7 @@ class EmotionAnalyzer:
                 'text': text,
                 'emotion_score': score.item(),
                 'emotion_type': emotion_type,
-                'context_weight': attention_weights[0, i].item()
+                'context_weight': attention_weights[i].item()  # Removed the extra dimension
             })
         
         return results
@@ -439,8 +453,12 @@ def load_dataset(file_path: str) -> Dict:
 
 
 def main():
+    from transformers.file_utils import is_offline_mode
+
+    is_offline_mode.value = True
+
     system = EmotionAnalyzer()
-    dataset = load_dataset('/Users/alice.kim/Desktop/aa/Final/app/services/BERT-based_dataset.json')
+    dataset = load_dataset('/content/sample_data/BERT-based_dataset.json')
     
     if dataset is None:
         return
@@ -461,7 +479,8 @@ def main():
     test_conversation = [
         "오늘 중요한 시험 결과가 나왔어.",
         "열심히 준비한 만큼 좋은 점수를 받았어!",
-        "이제 한시름 놓인다."
+        "이제 한시름 놓인다.",
+        "오늘 정말 최악의 하루였어. 일이 잘 안 풀리고, 계속 실수를 했어. 너무 힘들고 지쳐서 아무것도 하고 싶지 않아."
     ]
     
     results = system.analyze_conversation(test_conversation)

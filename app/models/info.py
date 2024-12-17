@@ -36,3 +36,19 @@ class BehaviorClassificationResponse(BaseModel):
     behavior_type: str
     confidence: float
     confidence_level: str
+
+
+class EmpathyRequest(BaseModel):
+    utterances: List[dict]
+
+class EmpathyResponse(BaseModel):
+    success: bool
+    empathy_scores: List[float]
+    confidence_level: str
+
+class EmotionAnalysisRequest(BaseModel):
+    conversation: List[str]  # 대화 내용, 이 필드를 사용해 감정 분석
+
+class EmotionAnalysisResponse(BaseModel):
+    success: bool
+    results: List[dict]

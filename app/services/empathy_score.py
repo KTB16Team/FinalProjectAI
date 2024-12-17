@@ -82,6 +82,7 @@ class DialogueEmpathyModel(nn.Module):
         if speaker_ids.dim() == 1:
             speaker_ids = speaker_ids.unsqueeze(-1)
             print(f"Reshaped Speaker IDs shape: {speaker_ids.shape}")
+
         # 초기 상태 설정
         party_hidden = self.initial_party_state.expand(batch_size, -1, -1).to(device)
         global_hidden = self.initial_global_state.expand(batch_size, -1, -1).to(device)
