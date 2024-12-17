@@ -3,7 +3,6 @@ import time
 from fastapi import FastAPI, HTTPException, APIRouter
 from prometheus_client import generate_latest, REGISTRY, Counter, Gauge, Histogram
 from starlette.responses import PlainTextResponse
-from core.logging import setup_logger
 
 
 app = FastAPI()
