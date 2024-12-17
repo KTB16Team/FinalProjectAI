@@ -18,8 +18,9 @@ def setup_logger():
     # 파일 핸들러 추가
     file_handler = RotatingFileHandler(LOG_FILE, maxBytes=10 * 1024 * 1024, backupCount=5)
     formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    "%(asctime)s [%(threadName)s] %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S"
+)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
