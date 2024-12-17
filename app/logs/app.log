@@ -1,0 +1,259 @@
+2024-12-17 00:59:55,161 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 00:59:55,161 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:00:22,571 - my_fastapi_app - INFO - Received message: {"id":30731,"content":"이제 로그가 보인다?\n","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:00:22,571 - my_fastapi_app - INFO - Received message: {"id":30731,"content":"이제 로그가 보인다?\n","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:00:22,573 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:00:22,573 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:00:34,393 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30731, 'title': '로그 확인과 갈등', 'stancePlaintiff': 'A는 로그가 보이기 시작한 것에 대해 긍정적인 감정을 느끼고 있으며, 이 문제를 해결하기 위해 B와의 대화가 필요하다고 생각하고 있다. A는 B가 로그 문제를 간과하고 있다고 주장하며, 이로 인해 불만이 쌓이고 있다. A는 B의 반응이 부정적이라고 느끼고 있으며, 이로 인해 갈등이 심화되고 있다고 주장한다.', 'stanceDefendant': 'B는 A의 주장에 대해 회의적인 입장을 가지고 있으며, 로그 문제가 해결되지 않은 이유에 대해 A에게 책임이 있다고 생각하고 있다. B는 A의 감정 표현이 과도하다고 느끼며, A가 문제를 더 복잡하게 만들고 있다고 주장한다. B는 A의 불만이 자신에게 향하는 것에 대해 불쾌감을 느끼고 있다.', 'summaryAi': 'A와 B는 최근의 로그 문제에 대해 대화를 나누고 있다. A는 로그가 보이기 시작했다고 주장하며, B는 이에 대한 반응을 보인다. C, D, E는 이 대화에 간접적으로 관련된 인물들이다.', 'judgement': '대화의 내용을 종합적으로 검토한 결과, A와 B 모두 서로의 입장을 이해하지 못하고 있으며, 갈등이 심화되고 있다. A는 자신의 감정을 보다 명확히 전달하고, B는 A의 주장을 경청하는 태도를 가져야 한다. 서로의 입장을 존중하며 대화하는 것이 필요하다.', 'faultRate': 45.0}
+2024-12-17 01:00:34,393 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30731, 'title': '로그 확인과 갈등', 'stancePlaintiff': 'A는 로그가 보이기 시작한 것에 대해 긍정적인 감정을 느끼고 있으며, 이 문제를 해결하기 위해 B와의 대화가 필요하다고 생각하고 있다. A는 B가 로그 문제를 간과하고 있다고 주장하며, 이로 인해 불만이 쌓이고 있다. A는 B의 반응이 부정적이라고 느끼고 있으며, 이로 인해 갈등이 심화되고 있다고 주장한다.', 'stanceDefendant': 'B는 A의 주장에 대해 회의적인 입장을 가지고 있으며, 로그 문제가 해결되지 않은 이유에 대해 A에게 책임이 있다고 생각하고 있다. B는 A의 감정 표현이 과도하다고 느끼며, A가 문제를 더 복잡하게 만들고 있다고 주장한다. B는 A의 불만이 자신에게 향하는 것에 대해 불쾌감을 느끼고 있다.', 'summaryAi': 'A와 B는 최근의 로그 문제에 대해 대화를 나누고 있다. A는 로그가 보이기 시작했다고 주장하며, B는 이에 대한 반응을 보인다. C, D, E는 이 대화에 간접적으로 관련된 인물들이다.', 'judgement': '대화의 내용을 종합적으로 검토한 결과, A와 B 모두 서로의 입장을 이해하지 못하고 있으며, 갈등이 심화되고 있다. A는 자신의 감정을 보다 명확히 전달하고, B는 A의 주장을 경청하는 태도를 가져야 한다. 서로의 입장을 존중하며 대화하는 것이 필요하다.', 'faultRate': 45.0}
+2024-12-17 01:00:34,394 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:00:34,394 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:00:34,621 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:00:33"}
+2024-12-17 01:00:34,621 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:00:33"}
+2024-12-17 01:00:34,622 - my_fastapi_app - INFO - Message processed successfully: 30731
+2024-12-17 01:00:34,622 - my_fastapi_app - INFO - Message processed successfully: 30731
+2024-12-17 01:00:34,633 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:00:34,633 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:02:53,653 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:02:53,653 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:07:57,518 - my_fastapi_app - INFO - Received message: {"id":30732,"content":"로그야 뜨자 로그야!!!","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:07:57,518 - my_fastapi_app - INFO - Received message: {"id":30732,"content":"로그야 뜨자 로그야!!!","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:07:57,519 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:07:57,519 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:08:03,085 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30732, 'title': '로그 문제 해결 요청', 'stancePlaintiff': 'A는 로그가 뜨지 않아 매우 불편하고, 이 문제를 해결해주길 강하게 원하고 있다. A는 B에게 자신의 불만을 표현하며, 상황이 개선되지 않으면 더욱 화가 날 것이라고 경고한다. A는 문제 해결을 위한 B의 적극적인 노력을 기대하고 있다.', 'stanceDefendant': 'B는 A의 불만을 이해하려고 노력하지만, A의 감정적인 반응에 당황하고 있다. B는 문제의 원인을 찾기 위해 정보를 수집하려고 하지만, A의 불만이 커지면서 대화가 어려워지고 있다. B는 A에게 상황을 차분히 설명하고 싶어하지만, A의 반응이 그 과정을 방해하고 있다.', 'summaryAi': 'A는 B와 대화 중 로그가 뜨지 않는 문제에 대해 불만을 토로하며 해결을 요청한다. B는 A의 요청을 듣고 상황을 파악하려고 하지만, A는 감정적으로 반응하며 불만을 표출한다. C와 D는 이 대화에 개입하여 상황을 중재하려고 시도한다.', 'judgement': 'A는 자신의 감정을 솔직하게 표현했지만, B와의 대화에서 감정적으로 반응한 점이 문제 해결에 방해가 되었다. B는 A의 불만을 이해하고 문제 해결을 위해 노력해야 하며, A는 B의 입장도 고려하여 보다 차분하게 대화하는 것이 필요하다. 향후 대화에서는 서로의 입장을 존중하며 문제를 해결하기 위한 협력이 필요하다.', 'faultRate': 45.0}
+2024-12-17 01:08:03,085 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30732, 'title': '로그 문제 해결 요청', 'stancePlaintiff': 'A는 로그가 뜨지 않아 매우 불편하고, 이 문제를 해결해주길 강하게 원하고 있다. A는 B에게 자신의 불만을 표현하며, 상황이 개선되지 않으면 더욱 화가 날 것이라고 경고한다. A는 문제 해결을 위한 B의 적극적인 노력을 기대하고 있다.', 'stanceDefendant': 'B는 A의 불만을 이해하려고 노력하지만, A의 감정적인 반응에 당황하고 있다. B는 문제의 원인을 찾기 위해 정보를 수집하려고 하지만, A의 불만이 커지면서 대화가 어려워지고 있다. B는 A에게 상황을 차분히 설명하고 싶어하지만, A의 반응이 그 과정을 방해하고 있다.', 'summaryAi': 'A는 B와 대화 중 로그가 뜨지 않는 문제에 대해 불만을 토로하며 해결을 요청한다. B는 A의 요청을 듣고 상황을 파악하려고 하지만, A는 감정적으로 반응하며 불만을 표출한다. C와 D는 이 대화에 개입하여 상황을 중재하려고 시도한다.', 'judgement': 'A는 자신의 감정을 솔직하게 표현했지만, B와의 대화에서 감정적으로 반응한 점이 문제 해결에 방해가 되었다. B는 A의 불만을 이해하고 문제 해결을 위해 노력해야 하며, A는 B의 입장도 고려하여 보다 차분하게 대화하는 것이 필요하다. 향후 대화에서는 서로의 입장을 존중하며 문제를 해결하기 위한 협력이 필요하다.', 'faultRate': 45.0}
+2024-12-17 01:08:03,086 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:08:03,086 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:08:03,310 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:08:02"}
+2024-12-17 01:08:03,310 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:08:02"}
+2024-12-17 01:08:03,311 - my_fastapi_app - INFO - Message processed successfully: 30732
+2024-12-17 01:08:03,311 - my_fastapi_app - INFO - Message processed successfully: 30732
+2024-12-17 01:08:03,322 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:08:03,322 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:13:09,506 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:13:09,506 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:38:34,609 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:38:34,609 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:38:34,609 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:40:03,465 - my_fastapi_app - INFO - Received message: {"id":30733,"content":"마지막 업로드 하고 자자","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:40:03,465 - my_fastapi_app - INFO - Received message: {"id":30733,"content":"마지막 업로드 하고 자자","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:40:03,465 - my_fastapi_app - INFO - Received message: {"id":30733,"content":"마지막 업로드 하고 자자","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:40:03,467 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:40:03,467 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:40:03,467 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:40:10,326 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30733, 'title': '마지막 업로드 후의 감정 갈등', 'stancePlaintiff': 'A는 마지막 업로드 이후 B와의 대화에서 불만과 혼란을 느꼈다. A는 B가 자신의 감정을 무시하고 있다고 주장하며, 이러한 태도가 자신에게 상처를 주었다고 강조한다. A는 B와의 관계에서 소통의 중요성을 느끼고 있으며, B가 자신의 감정을 이해해주기를 바란다.', 'stanceDefendant': 'B는 A와의 대화에서 자신의 의도를 제대로 전달하지 못했다고 느끼고 있다. B는 A의 감정이 과도하다고 생각하며, A가 자신의 입장을 이해하지 못하고 있다고 주장한다. B는 A와의 소통이 원활하지 않은 점을 아쉬워하며, 서로의 입장을 이해하려는 노력이 필요하다고 강조한다.', 'summaryAi': 'A는 최근에 마지막 업로드를 하고 자려고 했으나, B와의 대화에서 감정적인 갈등이 발생했다. A는 B와의 소통에서 불만을 느끼고 있으며, B는 A의 감정을 이해하지 못하고 있다. C, D, E는 이 대화에 간접적으로 영향을 미치는 인물들이다.', 'judgement': 'A와 B 모두 서로의 감정을 이해하려는 노력이 부족했던 것으로 보인다. A는 자신의 감정을 솔직하게 표현할 필요가 있으며, B는 A의 감정을 존중하고 이해하려는 태도를 가져야 한다. 향후 소통에서 서로의 입장을 고려하는 것이 중요하다.', 'faultRate': 45.0}
+2024-12-17 01:40:10,326 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30733, 'title': '마지막 업로드 후의 감정 갈등', 'stancePlaintiff': 'A는 마지막 업로드 이후 B와의 대화에서 불만과 혼란을 느꼈다. A는 B가 자신의 감정을 무시하고 있다고 주장하며, 이러한 태도가 자신에게 상처를 주었다고 강조한다. A는 B와의 관계에서 소통의 중요성을 느끼고 있으며, B가 자신의 감정을 이해해주기를 바란다.', 'stanceDefendant': 'B는 A와의 대화에서 자신의 의도를 제대로 전달하지 못했다고 느끼고 있다. B는 A의 감정이 과도하다고 생각하며, A가 자신의 입장을 이해하지 못하고 있다고 주장한다. B는 A와의 소통이 원활하지 않은 점을 아쉬워하며, 서로의 입장을 이해하려는 노력이 필요하다고 강조한다.', 'summaryAi': 'A는 최근에 마지막 업로드를 하고 자려고 했으나, B와의 대화에서 감정적인 갈등이 발생했다. A는 B와의 소통에서 불만을 느끼고 있으며, B는 A의 감정을 이해하지 못하고 있다. C, D, E는 이 대화에 간접적으로 영향을 미치는 인물들이다.', 'judgement': 'A와 B 모두 서로의 감정을 이해하려는 노력이 부족했던 것으로 보인다. A는 자신의 감정을 솔직하게 표현할 필요가 있으며, B는 A의 감정을 존중하고 이해하려는 태도를 가져야 한다. 향후 소통에서 서로의 입장을 고려하는 것이 중요하다.', 'faultRate': 45.0}
+2024-12-17 01:40:10,326 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30733, 'title': '마지막 업로드 후의 감정 갈등', 'stancePlaintiff': 'A는 마지막 업로드 이후 B와의 대화에서 불만과 혼란을 느꼈다. A는 B가 자신의 감정을 무시하고 있다고 주장하며, 이러한 태도가 자신에게 상처를 주었다고 강조한다. A는 B와의 관계에서 소통의 중요성을 느끼고 있으며, B가 자신의 감정을 이해해주기를 바란다.', 'stanceDefendant': 'B는 A와의 대화에서 자신의 의도를 제대로 전달하지 못했다고 느끼고 있다. B는 A의 감정이 과도하다고 생각하며, A가 자신의 입장을 이해하지 못하고 있다고 주장한다. B는 A와의 소통이 원활하지 않은 점을 아쉬워하며, 서로의 입장을 이해하려는 노력이 필요하다고 강조한다.', 'summaryAi': 'A는 최근에 마지막 업로드를 하고 자려고 했으나, B와의 대화에서 감정적인 갈등이 발생했다. A는 B와의 소통에서 불만을 느끼고 있으며, B는 A의 감정을 이해하지 못하고 있다. C, D, E는 이 대화에 간접적으로 영향을 미치는 인물들이다.', 'judgement': 'A와 B 모두 서로의 감정을 이해하려는 노력이 부족했던 것으로 보인다. A는 자신의 감정을 솔직하게 표현할 필요가 있으며, B는 A의 감정을 존중하고 이해하려는 태도를 가져야 한다. 향후 소통에서 서로의 입장을 고려하는 것이 중요하다.', 'faultRate': 45.0}
+2024-12-17 01:40:10,337 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:40:10,337 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:40:10,337 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:40:10,452 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:40:09"}
+2024-12-17 01:40:10,452 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:40:09"}
+2024-12-17 01:40:10,452 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:40:09"}
+2024-12-17 01:40:10,453 - my_fastapi_app - INFO - Message processed successfully: 30733
+2024-12-17 01:40:10,453 - my_fastapi_app - INFO - Message processed successfully: 30733
+2024-12-17 01:40:10,453 - my_fastapi_app - INFO - Message processed successfully: 30733
+2024-12-17 01:40:10,494 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:40:10,494 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:40:10,494 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:41:00,795 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:41:00,795 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:41:13,624 - my_fastapi_app - INFO - Received message: {"id":30734,"content":"마지막 한번더!갑시다!","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:41:13,624 - my_fastapi_app - INFO - Received message: {"id":30734,"content":"마지막 한번더!갑시다!","nickname":"nickname1","gender":"male","birth":"1989-12-30"}
+2024-12-17 01:41:13,625 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:41:13,625 - my_fastapi_app - INFO - Executing test_response function...
+2024-12-17 01:41:20,919 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30734, 'title': '마지막 기회에 대한 갈등', 'stancePlaintiff': 'A는 마지막 기회를 놓치고 싶지 않으며, B가 자신의 의견을 무시하고 있다고 느낀다. A는 C와 D의 지지를 받으며 자신의 주장을 더욱 강하게 내세우고, B의 반박에 대해 실망과 분노를 느낀다. A는 이 상황에서 자신의 입장이 충분히 존중받지 못하고 있다고 주장한다.', 'stanceDefendant': 'B는 A의 주장이 지나치게 감정적이라고 생각하며, A가 상황을 왜곡하고 있다고 주장한다. B는 자신의 입장을 설명하려 하지만 A의 반발로 인해 대화가 원활하지 않다고 느낀다. B는 A가 자신의 의견을 받아들이지 않으려는 태도에 실망감을 느끼고 있다.', 'summaryAi': 'A와 B는 마지막 기회를 두고 갈등을 겪고 있다. A는 C와 D의 의견을 듣고 B에게 자신의 입장을 강하게 주장하며, B는 A의 주장을 반박하고 자신의 입장을 고수한다. E는 이 상황을 지켜보며 중재하려고 하지만, 두 사람의 감정이 격해져 상황이 복잡해진다.', 'judgement': 'A와 B 모두 자신의 입장을 고수하고 있으며, 서로의 감정을 이해하려는 노력이 부족하다. A는 자신의 주장을 좀 더 차분하게 전달할 필요가 있으며, B는 A의 감정을 존중하고 대화에 임해야 한다. 중재자 E는 두 사람 간의 대화를 원활하게 하기 위해 중립적인 입장에서 조정할 필요가 있다. 향후 대화에서는 서로의 입장을 경청하고 감정을 존중하는 것이 중요하다.', 'faultRate': 45.0}
+2024-12-17 01:41:20,919 - my_fastapi_app - INFO - Sending POST request to DataInfoSummary: {'status': True, 'accessKey': 'wqdwmkfokfp323l3w3w3ekwpt3698m3o-ir2PJO=WmwQ3k0pew30i543t3WQEWQEw32462ojleeqwr0943nudskl3poqmWqwp2gu38', 'id': 30734, 'title': '마지막 기회에 대한 갈등', 'stancePlaintiff': 'A는 마지막 기회를 놓치고 싶지 않으며, B가 자신의 의견을 무시하고 있다고 느낀다. A는 C와 D의 지지를 받으며 자신의 주장을 더욱 강하게 내세우고, B의 반박에 대해 실망과 분노를 느낀다. A는 이 상황에서 자신의 입장이 충분히 존중받지 못하고 있다고 주장한다.', 'stanceDefendant': 'B는 A의 주장이 지나치게 감정적이라고 생각하며, A가 상황을 왜곡하고 있다고 주장한다. B는 자신의 입장을 설명하려 하지만 A의 반발로 인해 대화가 원활하지 않다고 느낀다. B는 A가 자신의 의견을 받아들이지 않으려는 태도에 실망감을 느끼고 있다.', 'summaryAi': 'A와 B는 마지막 기회를 두고 갈등을 겪고 있다. A는 C와 D의 의견을 듣고 B에게 자신의 입장을 강하게 주장하며, B는 A의 주장을 반박하고 자신의 입장을 고수한다. E는 이 상황을 지켜보며 중재하려고 하지만, 두 사람의 감정이 격해져 상황이 복잡해진다.', 'judgement': 'A와 B 모두 자신의 입장을 고수하고 있으며, 서로의 감정을 이해하려는 노력이 부족하다. A는 자신의 주장을 좀 더 차분하게 전달할 필요가 있으며, B는 A의 감정을 존중하고 대화에 임해야 한다. 중재자 E는 두 사람 간의 대화를 원활하게 하기 위해 중립적인 입장에서 조정할 필요가 있다. 향후 대화에서는 서로의 입장을 경청하고 감정을 존중하는 것이 중요하다.', 'faultRate': 45.0}
+2024-12-17 01:41:20,920 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:41:20,920 - my_fastapi_app - INFO - Sending POST request to CALLBACK_URL: https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback
+2024-12-17 01:41:21,020 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:41:19"}
+2024-12-17 01:41:21,020 - my_fastapi_app - INFO - Callback response: 200, {"status":"OK","timestamp":"2024-12-17 01:41:19"}
+2024-12-17 01:41:21,020 - my_fastapi_app - INFO - Message processed successfully: 30734
+2024-12-17 01:41:21,020 - my_fastapi_app - INFO - Message processed successfully: 30734
+2024-12-17 01:41:21,055 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:41:21,055 - my_fastapi_app - ERROR - 알 수 없는 오류 발생: (406, 'PRECONDITION_FAILED - unknown delivery tag 1')
+2024-12-17 01:42:13,997 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 01:55:27,756 - my_fastapi_app - INFO - get_infos start
+2024-12-17 01:55:27,756 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:00:11,870 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:00:39,423 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:00:39,424 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:04:02,000 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:04:07,888 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:04:07,889 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:04:46,746 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:04:50,898 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:04:50,899 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:07:26,192 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:07:31,748 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:07:31,748 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:11:46,109 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:11:59,258 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:12:03,367 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:12:03,368 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:14:41,215 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:14:47,405 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:14:47,405 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:15:15,508 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:15:19,716 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:15:19,717 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:16:46,869 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:16:47,119 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:16:47,120 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:26:22,038 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:26:22,828 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:26:22,828 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:26:52,171 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:26:53,886 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:26:53,886 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:30:28,094 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:31:18,378 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:31:29,588 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:31:29,588 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:38:29,486 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 02:38:30,222 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:38:30,223 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 02:52:47,508 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:52:47,508 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 02:59:48,435 - my_fastapi_app - INFO - get_infos start
+2024-12-17 02:59:48,435 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:03:23,074 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:03:51,025 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:03:51,025 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:03:51,545 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:05:27,225 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:05:47,218 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:05:50,868 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:05:50,868 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:05:51,568 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:06:34,193 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:06:34,451 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:06:34,452 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:06:34,935 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:15:02,910 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:15:06,856 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:15:07,860 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:15:08,644 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:16:01,421 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:16:11,111 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:16:12,121 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:16:12,553 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:17:47,168 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:17:51,089 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:17:52,101 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:19:00,253 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:19:00,309 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:19:01,263 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:19:02,758 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:20:39,393 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:20:49,036 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:20:50,050 - my_fastapi_app - INFO - audio URL : s3://ktb-aimo/audio/스크린샷 2024-11-27 213534.png
+2024-12-17 03:20:50,506 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:21:51,053 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:21:52,064 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:25:15,654 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:25:27,572 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:25:28,579 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:26:07,025 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:26:11,988 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:26:13,000 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:28:09,426 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:28:09,536 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 03:28:10,440 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:28:11,895 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:57:39,382 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:57:40,395 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-11-27+213534.png
+2024-12-17 03:57:40,908 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 03:58:48,896 - my_fastapi_app - INFO - get_infos start
+2024-12-17 03:58:49,906 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/mango.m4a
+2024-12-17 03:58:50,481 - my_fastapi_app - INFO - download_file_from_s3
+2024-12-17 04:12:53,946 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 04:12:59,934 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:13:00,946 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/mango.m4a
+2024-12-17 04:13:05,794 - my_fastapi_app - ERROR - General STT processing error: Error code: 400 - {'error': {'message': "Unrecognized file format. Supported formats: ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']", 'type': 'invalid_request_error', 'param': None, 'code': None}}
+2024-12-17 04:17:36,782 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 04:17:47,365 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:17:48,373 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/mango.m4a
+2024-12-17 04:17:51,167 - my_fastapi_app - ERROR - General STT processing error: Error code: 400 - {'error': {'message': "Invalid file format. Supported formats: ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']", 'type': 'invalid_request_error', 'param': None, 'code': None}}
+2024-12-17 04:19:07,426 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:19:08,434 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/audio/SttTest.m4a
+2024-12-17 04:19:17,275 - my_fastapi_app - INFO - STT processing completed successfully.
+2024-12-17 04:19:18,279 - my_fastapi_app - INFO - Response: status='Created' timestamp=datetime.datetime(2024, 12, 17, 4, 19, 18) data=DataInfoSTT(script='그 다음에 무슨 이미지를 쓰던지 상관이 없고, 4번 문제 같은 경우엔 밈 필터링과 메디안 필터링이 왜 가우시한 노이즈를 제거하는데 좋은지 각각 설명을 하면 되고 그 다음에 박스 필터, 메디안 필터를 구현을 하면 됩니다. 그리고 각각 다양한 사이즈랑 윈도우 사이즈로 비교를 해보시고 그 다음에 특히 메디안 필터를 구현할 때는 실제로 솔텐페퍼 노이즈를 적용을 한 다음에 실제로 이게 정말 잘 지워지는지 그걸 한번 체크를 해보세요. 이런식으로 보여주면 됩니다. 이런식으로 노이즈를 주입했지만 스무딩은 이렇게 남아있지만 필터링된건 깔끔해지죠. 이런식으로 보여주면 됩니다. 그 다음에 이건 아까 3장에서 이미지 샤프닝과 라플라시안 필터를 좀 다르게 했을 때 비교를 해보라는 거고 6번 같은 경우에는 실제로 프리에 트랜스폼을 수식으로 해보는 것. B 같은 경우는 컨볼러션 띄어렘 증명하는 것. 그 다음에 1D 샘플링 띄어렘 했었지. 샘플링 띄어렘이 뭔지 그 다음에 2D 샘플링 띄어렘이 또 뭔지만 쓰면 되고 그 다음에 특히 1D 샘플링 띄어렘 같은 경우에는 왜 항상 나이트퀴스트 레이트보다 높은 샘플링 레이트를 가져야 이게 완벽 복원이 가능한지를 예시로 들어서 설명해 주면 됩니다. 굳이 매트미티컬하게 쓸 필요는 없어요. 예시만 들어주면 됩니다. 참고로 이 예시는 책에 있어요. 그 다음에 LPF가 스파셜 도메인에서의 민필터링과 비슷하다는 것을 인정하냐. 인정한다면 그 이유를 작성하지. 그 다음에 이런 다양한 필터 종류들이 있는데 그 결과를 해석을 해봐라. 비교를 해봐라. 이런식으로 보여주면 됩니다. 안어렵죠? 이게 다 책에 있는 거예요. 책에서 다 찾아보면 다 나오는 거라서. 그래서 쉬워요. 진짜로. 그래서 이거를 다음 주 금요일까지 해보면 될 것 같습니다. 8일이죠?')
+2024-12-17 04:51:25,664 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 04:52:15,447 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:52:16,452 - my_fastapi_app - INFO - audio URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 04:52:18,494 - my_fastapi_app - ERROR - General STT processing error: Error code: 400 - {'error': {'message': "Invalid file format. Supported formats: ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']", 'type': 'invalid_request_error', 'param': None, 'code': None}}
+2024-12-17 04:53:09,105 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:53:10,116 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 04:53:10,116 - my_fastapi_app - ERROR - General OCR processing error: name 'download_s3_file' is not defined
+2024-12-17 04:54:37,533 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:54:38,542 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 04:54:38,542 - my_fastapi_app - ERROR - General OCR processing error: name 'download_s3_file' is not defined
+2024-12-17 04:55:00,816 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 04:55:17,853 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:55:18,861 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 04:55:29,360 - my_fastapi_app - INFO - OCR processing completed successfully.
+2024-12-17 04:58:58,787 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 04:59:27,016 - my_fastapi_app - INFO - get_infos start
+2024-12-17 04:59:28,029 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 04:59:30,242 - my_fastapi_app - INFO - [{'text': '김현중[카테부 16조]', 'probability': 0.9267911203948028, 'bounding_box': [[96, 14], [264, 14], [264, 44], [96, 44]]}, {'text': '야이 바보야]!', 'probability': 0.2784034225571384, 'bounding_box': [[104, 54], [218, 54], [218, 78], [104, 78]]}, {'text': '내마음도 몰라주고', 'probability': 0.8720878109265979, 'bounding_box': [[104, 102], [258, 102], [258, 128], [104, 128]]}, {'text': '오후 9.36', 'probability': 0.7625202590606308, 'bounding_box': [[275, 119], [347, 119], [347, 139], [275, 139]]}, {'text': '뭐라고?', 'probability': 0.9938899278640747, 'bounding_box': [[648, 168], [716, 168], [716, 192], [648, 192]]}, {'text': '오후 9.36', 'probability': 0.7625202590606308, 'bounding_box': [[563, 183], [635, 183], [635, 203], [563, 203]]}, {'text': '김현중[카테부 16조]', 'probability': 0.9267911203948028, 'bounding_box': [[96, 220], [264, 220], [264, 250], [96, 250]]}, {'text': '뭐라고!', 'probability': 0.9511579275131226, 'bounding_box': [[104, 260], [170, 260], [170, 284], [104, 284]]}, {'text': '오후 9.36', 'probability': 0.6340657166970519, 'bounding_box': [[182, 274], [256, 274], [256, 298], [182, 298]]}, {'text': '너는 왜', 'probability': 0.6087179534554396, 'bounding_box': [[650, 324], [714, 324], [714, 350], [650, 350]]}, {'text': '너밖에', 'probability': 0.9786569995030595, 'bounding_box': [[656, 374], [714, 374], [714, 398], [656, 398]]}, {'text': '몰라', 'probability': 0.5182432630891449, 'bounding_box': [[674, 424], [716, 424], [716, 450], [674, 450]]}, {'text': '오후 9.36', 'probability': 0.4152899321102118, 'bounding_box': [[589, 439], [661, 439], [661, 459], [589, 459]]}, {'text': '김현중[카테부 16조]', 'probability': 0.8621841056783656, 'bounding_box': [[96, 478], [264, 478], [264, 504], [96, 504]]}, {'text': '나니깐', 'probability': 0.7863386273384094, 'bounding_box': [[104, 516], [164, 516], [164, 542], [104, 542]]}, {'text': '오후 9.36', 'probability': 0.7625202590606308, 'bounding_box': [[179, 533], [251, 533], [251, 553], [179, 553]]}]
+2024-12-17 04:59:31,245 - my_fastapi_app - INFO - OCR processing completed successfully.
+2024-12-17 05:31:30,050 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 05:32:16,788 - my_fastapi_app - INFO - get_infos start
+2024-12-17 05:32:17,791 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 05:32:20,898 - my_fastapi_app - INFO - None, 상대방 : 김현중[카테부 16조]
+None, 상대방 : 야이 바보야]!
+오후 9.36, 상대방 : 내마음도 몰라주고
+오후 9.36, 사용자 : 뭐라고?
+오후 9.36, 상대방 : 김현중[카테부 16조] 뭐라고!
+오후 9.36, 사용자 : 너는 왜 너밖에 몰라
+오후 9.36, 상대방 : 김현중[카테부 16조] 나니깐
+2024-12-17 05:32:21,903 - my_fastapi_app - INFO - OCR processing completed successfully.
+2024-12-17 05:32:21,906 - my_fastapi_app - INFO - Response: status='Created' timestamp=datetime.datetime(2024, 12, 17, 5, 32, 21) data=DataInfoSTT(script='None, 상대방 : 김현중[카테부 16조]\nNone, 상대방 : 야이 바보야]!\n오후 9.36, 상대방 : 내마음도 몰라주고\n오후 9.36, 사용자 : 뭐라고?\n오후 9.36, 상대방 : 김현중[카테부 16조] 뭐라고!\n오후 9.36, 사용자 : 너는 왜 너밖에 몰라\n오후 9.36, 상대방 : 김현중[카테부 16조] 나니깐')
+2024-12-17 05:39:06,074 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 05:39:13,363 - my_fastapi_app - INFO - get_infos start
+2024-12-17 05:39:14,370 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 05:39:19,093 - my_fastapi_app - INFO - None, 상대방 : 김현중[카테부 16조]
+None, 상대방 : 야이 바보야]!
+오후 9.36, 상대방 : 내마음도 몰라주고
+오후 9.36, 사용자 : 뭐라고?
+오후 9.36, 상대방 : 김현중[카테부 16조] 뭐라고!
+오후 9.36, 사용자 : 너는 왜 너밖에 몰라
+오후 9.36, 상대방 : 김현중[카테부 16조] 나니깐
+2024-12-17 05:39:20,096 - my_fastapi_app - INFO - OCR processing completed successfully.
+2024-12-17 05:39:20,096 - my_fastapi_app - INFO - Response: status='Created' timestamp=datetime.datetime(2024, 12, 17, 5, 39, 20) data=DataInfoSTT(script='None, 상대방 : 김현중[카테부 16조]\nNone, 상대방 : 야이 바보야]!\n오후 9.36, 상대방 : 내마음도 몰라주고\n오후 9.36, 사용자 : 뭐라고?\n오후 9.36, 상대방 : 김현중[카테부 16조] 뭐라고!\n오후 9.36, 사용자 : 너는 왜 너밖에 몰라\n오후 9.36, 상대방 : 김현중[카테부 16조] 나니깐')
+2024-12-17 05:49:00,835 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 05:49:03,525 - my_fastapi_app - INFO - get_infos start
+2024-12-17 05:49:04,532 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 05:49:06,805 - my_fastapi_app - INFO - None, 상대방 : 김현중[카테부 16조]
+None, 상대방 : 야이 바보야]!
+오후 9.36, 상대방 : 내마음도 몰라주고
+오후 9.36, 사용자 : 뭐라고?
+오후 9.36, 상대방 : 김현중[카테부 16조]
+오후 9.36, 사용자 : 너는 왜너밖에몰라
+오후 9.36, 상대방 : 김현중[카테부 16조]
+2024-12-17 05:49:07,820 - my_fastapi_app - INFO - OCR processing completed successfully.
+2024-12-17 05:49:07,820 - my_fastapi_app - INFO - Response: status='Created' timestamp=datetime.datetime(2024, 12, 17, 5, 49, 7) data=DataInfoSTT(script='None, 상대방 : 김현중[카테부 16조]\nNone, 상대방 : 야이 바보야]!\n오후 9.36, 상대방 : 내마음도 몰라주고\n오후 9.36, 사용자 : 뭐라고?\n오후 9.36, 상대방 : 김현중[카테부 16조]\n오후 9.36, 사용자 : 너는 왜너밖에몰라\n오후 9.36, 상대방 : 김현중[카테부 16조]')
+2024-12-17 05:55:37,235 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 05:55:39,403 - my_fastapi_app - INFO - get_infos start
+2024-12-17 05:55:40,413 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 05:55:42,685 - my_fastapi_app - INFO - None, 상대방 : 김현중[카테부 16조]
+None, 상대방 : 야이 바보야]!
+오후 9.36, 상대방 : 내마음도 몰라주고
+오후 9.36, 사용자 : 뭐라고?
+오후 9.36, 상대방 : 뭐라고!
+오후 9.36, 사용자 : 너는 왜너밖에몰라
+오후 9.36, 상대방 : 나니깐
+2024-12-17 05:55:43,697 - my_fastapi_app - INFO - OCR processing completed successfully.
+2024-12-17 05:55:43,697 - my_fastapi_app - INFO - Response: status='Created' timestamp=datetime.datetime(2024, 12, 17, 5, 55, 43) data=DataInfoSTT(script='None, 상대방 : 김현중[카테부 16조]\nNone, 상대방 : 야이 바보야]!\n오후 9.36, 상대방 : 내마음도 몰라주고\n오후 9.36, 사용자 : 뭐라고?\n오후 9.36, 상대방 : 뭐라고!\n오후 9.36, 사용자 : 너는 왜너밖에몰라\n오후 9.36, 상대방 : 나니깐')
+2024-12-17 05:58:58,278 - my_fastapi_app - INFO - Worker is waiting for messages...
+2024-12-17 05:59:01,879 - my_fastapi_app - INFO - get_infos start
+2024-12-17 05:59:02,880 - my_fastapi_app - INFO - image URL : https://ktb-aimo.s3.ap-northeast-2.amazonaws.com/image/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7+2024-12-13+213642.png
+2024-12-17 05:59:05,641 - my_fastapi_app - INFO - None, 상대방 : 야이 바보야]!
+오후 9.36, 상대방 : 내마음도 몰라주고
+오후 9.36, 사용자 : 뭐라고?
+오후 9.36, 상대방 : 뭐라고!
+오후 9.36, 사용자 : 너는 왜너밖에몰라
+오후 9.36, 상대방 : 나니깐
+2024-12-17 05:59:06,651 - my_fastapi_app - INFO - OCR processing completed successfully.
+2024-12-17 05:59:06,651 - my_fastapi_app - INFO - Response: status='Created' timestamp=datetime.datetime(2024, 12, 17, 5, 59, 6) data=DataInfoSTT(script='None, 상대방 : 야이 바보야]!\n오후 9.36, 상대방 : 내마음도 몰라주고\n오후 9.36, 사용자 : 뭐라고?\n오후 9.36, 상대방 : 뭐라고!\n오후 9.36, 사용자 : 너는 왜너밖에몰라\n오후 9.36, 상대방 : 나니깐')
