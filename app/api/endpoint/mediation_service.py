@@ -1,10 +1,7 @@
 import json
-import os
 import ssl
 from fastapi import APIRouter, HTTPException, Header, status, BackgroundTasks
-import httpx
 from botocore.exceptions import ClientError
-from sqlalchemy import text
 from datetime import datetime
 from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
@@ -13,9 +10,7 @@ from services.image_process import process_image_file
 from core.logging import setup_logger
 from core.config import settings
 import requests
-import uuid
 import pika
-# import redis
 from services.emotion_behavior_situation import RelationshipAnalyzer
 router = APIRouter()
 # logger = logging.getLogger("uvicorn")
