@@ -2,14 +2,21 @@ import torch
 from transformers import AutoTokenizer, BertTokenizer
 from torch.nn import functional as F
 from typing import List, Dict
+from dotenv import load_dotenv
+from pathlib import Path
 import re
 import json
 from openai import AsyncOpenAI
 import asyncio
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from services.BERTbasedcontext import EmotionAnalyzer
+
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+
 
 class Config:
     MAX_LENGTH = 256
@@ -21,6 +28,8 @@ class Config:
 
 class SituationAnalyzer:
     def __init__(self):
+        if not Config.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is not set. Please check your .env file.")
         self.client = AsyncOpenAI(api_key=Config.OPENAI_API_KEY)
 
     async def analyze_text(self, text: str) -> Dict[str, Dict[str, any]]:

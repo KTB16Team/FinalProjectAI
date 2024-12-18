@@ -10,3 +10,4 @@ BERTbasedemotion_model.pt
 worst.pt
 app/.DS_Store
 .DS_Store
+app/.env
