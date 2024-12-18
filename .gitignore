@@ -1,14 +1,13 @@
-# IntelliJ IDEA specific files
+
 .idea/vcs.xml
 .idea/workspace.xml
-
-# Python virtual environment
-/venv
-
-# Cache files
-**/__pycache__/
-**/*.py[cod]
-
-# Environment variables
+app/services/Behavior_classifier.pt
+app/services/emotion_classifier.pt
+app/services/empathy_bestmodel.pt
+best_model.pt
+Behavior_classifier.pt
+BERTbasedemotion_model.pt
+worst.pt
+app/.DS_Store
+.DS_Store
 app/.env
-.vscode/settings.json

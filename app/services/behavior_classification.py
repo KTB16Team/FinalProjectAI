@@ -17,16 +17,45 @@ from tqdm import tqdm
 import random
 import re
 import requests
+import os
 
 class Config:
     MAX_LENGTH = 256
-    BATCH_SIZE = 16
+    BATCH_SIZE = 16 #안정성을 위해서 32로 해도 될라나
     EPOCHS = 10
     LEARNING_RATE = 2e-5
     NUM_LABELS = 5
     SAVE_PATH = "Behavior_classifier.pt" 
     PATIENCE = 5
     WEIGHT_DECAY = 0.01
+
+class CustomBERTClassifier(torch.nn.Module):
+    def __init__(self, num_labels):
+        super().__init__()
+        self.bert = BertModel.from_pretrained("bert-base-multilingual-cased")
+        self.dropout = torch.nn.Dropout(0.1)
+        self.bert_config = self.bert.config
+        hidden_size = self.bert.config.hidden_size
+        # 더 안정적인 분류기 구조
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Linear(self.bert.config.hidden_size, 512),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.2),
+            torch.nn.Linear(512, num_labels)
+        )
+
+    def forward(self, input_ids, attention_mask, labels=None):
+        outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+        pooled_output = outputs.last_hidden_state[:, 0, :]  # CLS 토큰 사용
+        pooled_output = self.dropout(pooled_output)
+        logits = self.classifier(pooled_output)
+        
+        loss = None
+        if labels is not None:
+            loss_fct = torch.nn.CrossEntropyLoss()
+            loss = loss_fct(logits.view(-1, Config.NUM_LABELS), labels.view(-1))
+        
+        return logits, loss
 
 class OverfittingMonitor:
     def __init__(self, patience=3, threshold=0.1):
@@ -255,8 +284,9 @@ def augment_data(texts, labels, augmentation_multiplier=2, max_ratio=0.8):
 
     print("\n원본 데이터 클래스 분포:")
     class_distribution = Counter(labels)
-    for label in sorted(class_distribution.keys()):
-        print(f"클래스 {label}: {class_distribution[label]}개")
+    for label_idx in sorted(class_distribution.keys()):
+        category_name = label_names[label_idx]
+        print(f"{category_name}: {class_distribution[label_idx]}개")
 
     bert_model = BertModel.from_pretrained('bert-base-multilingual-cased')
     bert_tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
@@ -396,11 +426,11 @@ def evaluate_model(model, data_loader, device):
                 'labels' : batch['labels'].to(device)
             }
             
-            outputs = model(**inputs)
-            loss = outputs.loss
-            total_loss += loss.item()
+            logits, loss = model(**inputs)
+            if loss is not None:
+                total_loss = loss.item()
             
-            predictions = torch.argmax(outputs.logits, dim=1)
+            predictions = torch.argmax(logits, dim=1)
             all_preds.extend(predictions.cpu().numpy())
             all_labels.extend(batch['labels'].cpu().numpy())
     
@@ -437,12 +467,24 @@ def classify_text(model, tokenizer, text, device, label_map):
     ).to(device)
 
     with torch.no_grad():
-        outputs = model(**inputs)
-        probabilities = torch.softmax(outputs.logits, dim=1)
-        predictions = torch.argmax(outputs.logits, dim=1).item()
+        logits, _ = model(**inputs)
+        probabilities = torch.softmax(logits, dim=1)
+        predictions = torch.argmax(logits, dim=1).item()
         confidence = probabilities[0][predictions].item()
 
     return reverse_label_map[predictions], confidence
+
+
+def map_category_score(category):
+    """카테고리별 점수를 매핑"""
+    score_map = {
+        "경쟁": 0,
+        "회피": 0,
+        "타협": 0.5,
+        "협력": 1,
+        "수용": 1
+    }
+    return score_map.get(category, 0) 
 
 if __name__ == "__main__":
     torch.manual_seed(42)
@@ -458,22 +500,27 @@ if __name__ == "__main__":
     print(f"증강 후 총 샘플 수: {len(train_texts)}")
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-multilingual-cased")
-    model = BertForSequenceClassification.from_pretrained(
-        "bert-base-multilingual-cased",
-        num_labels=Config.NUM_LABELS,
-        problem_type ="single_label_classification"
-    )
+    model = CustomBERTClassifier(num_labels=Config.NUM_LABELS)
 
     model.classifier = torch.nn.Sequential(
-        BatchNorm1d(model.config.hidden_size),
+        BatchNorm1d(model.bert_config.hidden_size),
         model.classifier
     )
 
     train_dataset = BehaviorDataset(train_texts, train_labels, tokenizer)
     val_dataset = BehaviorDataset(val_texts, val_labels, tokenizer)
 
-    train_loader = DataLoader(train_dataset, batch_size=Config.BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=Config.BATCH_SIZE)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=Config.BATCH_SIZE,
+        shuffle=True,
+        drop_last=True
+        )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=Config.BATCH_SIZE,
+        drop_last=True
+        )
 
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -492,8 +539,11 @@ if __name__ == "__main__":
     # 모델 테스트
     test_text = "그래 내가 잘못한 거 맞아. 근데 너도 잘못한게 없지는 않잖아."
     prediction, confidence = classify_text(model, tokenizer, test_text, device, label_map)
+    category_score = map_category_score(prediction)
+
     print(f"\n입력 텍스트: {test_text}")
     print(f"예측된 카테고리: {prediction} (확신도: {confidence:.2%})")
+    print(f"카테고리 점수: {category_score}")
     
     print("\n모델 저장 경로:", Config.SAVE_PATH)
     
