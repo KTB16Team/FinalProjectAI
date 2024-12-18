@@ -82,17 +82,17 @@ jobs:
           script: |
             # 새로운 Docker 컨테이너 실행 (환경변수 설정 포함)
             docker run -d -p 8000:8000 \
-            --name ai-service \
-            -e CALLBACK_URL=${{ secrets.CALLBACK_URL }} \
-            -e ACCESSTOKEN=${{ secrets.ACCESSTOKEN }} \
-            -e AWS_REGION=${{ secrets.AWS_REGION }} \
-            -e AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
-            -e RABBITMQ_URL=${{ secrets.RABBITMQ_URL }} \
-            -e RABBITMQ_USER=${{ secrets.RABBITMQ_USER }} \
-            -e RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }} \
-            -e LOGSTASH_HOST=${{ secrets.LOGSTASH_HOST }} \
-            -v /home/${{ secrets.EC2_USER }}/models/:/app/services/ \  # 호스트의 모델 디렉토리를 컨테이너에 마운트
-            ${{ secrets.ECR_REGISTRY }}:latest
+              --name ai-service \
+              -e CALLBACK_URL=${{ secrets.CALLBACK_URL }} \
+              -e ACCESSTOKEN=${{ secrets.ACCESSTOKEN }} \
+              -e AWS_REGION=${{ secrets.AWS_REGION }} \
+              -e AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
+              -e RABBITMQ_URL=${{ secrets.RABBITMQ_URL }} \
+              -e RABBITMQ_USER=${{ secrets.RABBITMQ_USER }} \
+              -e RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }} \
+              -e LOGSTASH_HOST=${{ secrets.LOGSTASH_HOST }} \
+              -v /home/${{ secrets.EC2_USER }}/models/:/app/services/ \
+              ${{ secrets.ECR_REGISTRY }}:latest
 
       # 4. 헬스 체크 - 컨테이너가 실행 중인지 확인
       - name: Health Check Container
