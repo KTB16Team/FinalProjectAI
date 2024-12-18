@@ -2,9 +2,9 @@ name: AI ECR Build and Deploy to EC2  # 워크플로 이름 정의
 
 on:
   push:
-    branches: [ "feature" ]  # feature 브랜치에 푸시될 때 트리거
+    branches: [ "dev" ]  # feature 브랜치에 푸시될 때 트리거
   pull_request:
-    branches: [ "feature" ]
+    branches: [ "dev" ]
 
 jobs:
   # Docker 이미지 빌드 및 ECR 푸시 작업
