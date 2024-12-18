@@ -127,7 +127,7 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
         backend_payload = analysis_result['data']
         
         # 백엔드 서버 URL 설정 -> 이부분 수정해야 함
-        backend_server_url = os.getenv("BACKEND_SERVER_URL", "https://your-backend-server.com/api/receive-analysis")
+        backend_server_url = os.getenv("BACKEND_SERVER_URL", "https://api.ktb-aimo.link//api/v1/private-posts/judgement/callback")
         
         # 백엔드 서버로 데이터 전송
         async with httpx.AsyncClient() as client:
