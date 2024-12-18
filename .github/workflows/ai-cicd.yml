@@ -2,9 +2,9 @@ name: AI ECR Build and Deploy to EC2  # 워크플로 이름 정의
 
 on:
   push:
-    branches: [ "dev" ]  # dev 브랜치에 푸시될 때 트리거
+    branches: [ "feature" ]  # feature 브랜치에 푸시될 때 트리거
   pull_request:
-    branches: [ "dev" ]  # dev 브랜치로의 풀 리퀘스트가 생성될 때 트리거
+    branches: [ "feature" ]
 
 jobs:
   # Docker 이미지 빌드 및 ECR 푸시 작업
@@ -80,13 +80,18 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 새로운 Docker 컨테이너 실행 (AWS CloudWatch 로그 설정 포함)
+            # 새로운 Docker 컨테이너 실행 (환경변수 설정 포함)
             docker run -d -p 8000:8000 \
             --name ai-service \
-            --log-driver=awslogs \
-            --log-opt awslogs-region=ap-northeast-2 \
-            --log-opt awslogs-group=AimoAI_LogsMonitoring \
-            --log-opt awslogs-stream=AimoAI \
+            -e CALLBACK_URL=${{ secrets.CALLBACK_URL }} \
+            -e ACCESSTOKEN=${{ secrets.ACCESSTOKEN }} \
+            -e AWS_REGION=${{ secrets.AWS_REGION }} \
+            -e AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
+            -e RABBITMQ_URL=${{ secrets.RABBITMQ_URL }} \
+            -e RABBITMQ_USER=${{ secrets.RABBITMQ_USER }} \
+            -e RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }} \
+            -e LOGSTASH_HOST=${{ secrets.LOGSTASH_HOST }} \
+            -v /home/${{ secrets.EC2_USER }}/models/:/app/services/ \  # 호스트의 모델 디렉토리를 컨테이너에 마운트
             ${{ secrets.ECR_REGISTRY }}:latest
 
       # 4. 헬스 체크 - 컨테이너가 실행 중인지 확인
@@ -104,58 +109,3 @@ jobs:
                 echo "Error: Container failed to start."
                 exit 1
             fi
-        continue-on-error: true  # 실패 시에도 다음 작업 진행
-
-  # 알림 작업
-  notify:
-    runs-on: ubuntu-latest
-    needs: [build-and-push, deploy-to-ec2]
-    
-    steps:
-      - name: Notify Discord of Build and Deployment Result
-        if: always()  # 항상 실행
-        run: |
-          # GitHub Actions 링크 생성
-          ACTIONS_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  
-          # 한국 시간 생성
-          TIMESTAMP=$(TZ='Asia/Seoul' date +'%p %I:%M' | sed 's/AM/오전/g; s/PM/오후/g')
-
-          # 성공 및 실패 여부 확인
-          if [[ "${{ needs.build-and-push.result }}" == "success" && "${{ needs.deploy-to-ec2.result }}" == "success" ]]; then
-            # 성공 Embed 메시지
-            curl -H "Content-Type: application/json" \
-              -d '{
-                "embeds": [{
-                  "title": "✅ AI CI/CD 완료",
-                  "description": "아싸! 성공!",
-                  "color": 3066993,
-                  "fields": [
-                    { "name": "Build 결과", "value": "'"${{ needs.build-and-push.result }}"'", "inline": true },
-                    { "name": "Deploy 결과", "value": "'"${{ needs.deploy-to-ec2.result }}"'", "inline": true }
-                  ],
-                  "footer": {
-                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$TIMESTAMP"'"
-                  }
-                }]
-              }' \
-              https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
-          else
-            # 실패 Embed 메시지
-            curl -H "Content-Type: application/json" \
-              -d '{
-                "embeds": [{
-                  "title": "❌ AI CI/CD 실패",
-                  "description": "헉 레전드 사건 발생!! [로그 확인하기]('"$ACTIONS_URL"')",
-                  "color": 15158332,
-                  "fields": [
-                    { "name": "Build 결과", "value": "'"${{ needs.build-and-push.result }}"'", "inline": true },
-                    { "name": "Deploy 결과", "value": "'"${{ needs.deploy-to-ec2.result }}"'", "inline": true }
-                  ],
-                  "footer": {
-                    "text": "FinalProjectAI Github Action에서 전송됨 - '"$TIMESTAMP"'"
-                  }
-                }]
-              }' \
-              https://discord.com/api/webhooks/1303626195258314776/S8p1np6wTAelIdjyrXHdRyM6Me6lD6BzuylQ7ZTJN6t6IgToZnbiUPnBHbA8RO7UAlMx
-          fi
