@@ -28,27 +28,49 @@ class JudgeRequest(BaseModel):
 class STTRequest(BaseModel):
     url: str
 
-class BehaviorClassificationRequest(BaseModel):
-    text: str
-
-class BehaviorClassificationResponse(BaseModel):
-    success: bool
-    behavior_type: str
-    confidence: float
-    confidence_level: str
+class ConflictAnalysisRequest(BaseModel):
+    content: str
+    nickname: Optional[str] = None
+    gender: Optional[str] = None
+    birth: Optional[str] = None
+    id: Optional[str] = "id"
 
 
-class EmpathyRequest(BaseModel):
-    utterances: List[dict]
+class ConflictAnalysisResponseData(BaseModel):
+    id: str
+    title: str
+    stancePlaintiff: str
+    stanceDefendant: str
+    summaryAi: str
+    judgement: str
+    faultRate: float
 
-class EmpathyResponse(BaseModel):
-    success: bool
-    empathy_scores: List[float]
-    confidence_level: str
+class ConflictAnalysisResponse(BaseModel):
+    status: str
+    method: str
+    data: ConflictAnalysisResponseData
 
-class EmotionAnalysisRequest(BaseModel):
-    conversation: List[str]  # 대화 내용, 이 필드를 사용해 감정 분석
+# class BehaviorClassificationRequest(BaseModel):
+#     text: str
 
-class EmotionAnalysisResponse(BaseModel):
-    success: bool
-    results: List[dict]
+# class BehaviorClassificationResponse(BaseModel):
+#     success: bool
+#     behavior_type: str
+#     confidence: float
+#     confidence_level: str
+
+
+# class EmpathyRequest(BaseModel):
+#     utterances: List[dict]
+
+# class EmpathyResponse(BaseModel):
+#     success: bool
+#     empathy_scores: List[float]
+#     confidence_level: str
+
+# class EmotionAnalysisRequest(BaseModel):
+#     conversation: List[str]  # 대화 내용, 이 필드를 사용해 감정 분석
+
+# class EmotionAnalysisResponse(BaseModel):
+#     success: bool
+#     results: List[dict]
