@@ -8,6 +8,10 @@ from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 import time
+from pathlib import Path
+
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # 스탠스 변화 부분 볼려면 인덱스 필요
 class DialogueLine(BaseModel):
