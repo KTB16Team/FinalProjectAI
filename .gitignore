@@ -4,7 +4,9 @@
 app/services/Behavior_classifier.pt
 app/services/emotion_classifier.pt
 app/services/empathy_bestmodel.pt
-app/.DS_Store
-.DS_Store
+best_model.pt
+Behavior_classifier.pt
+BERTbasedemotion_model.pt
+worst.pt
 app/.DS_Store
 .DS_Store

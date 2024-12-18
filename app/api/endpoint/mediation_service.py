@@ -124,12 +124,12 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
             raise HTTPException(status_code=500, detail="Conflict analysis failed")
         
         # 백엔드 서버로 전송할 데이터 준비
-        backend_payload = analysis_result["data"]
+        backend_payload = analysis_result['data']
         
-        # 백엔드 서버 URL 정의 (실제 URL로 변경 필요)
+        # 백엔드 서버 URL 설정 -> 이부분 수정해야 함
         backend_server_url = os.getenv("BACKEND_SERVER_URL", "https://your-backend-server.com/api/receive-analysis")
         
-        # 백엔드 서버로 JSON 데이터 전송
+        # 백엔드 서버로 데이터 전송
         async with httpx.AsyncClient() as client:
             backend_response = await client.post(backend_server_url, json=backend_payload)
             
@@ -137,7 +137,7 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
                 logger.error(f"Failed to send data to backend server: {backend_response.status_code}")
                 raise HTTPException(status_code=502, detail="Failed to send data to backend server")
         
-        # 클라이언트에게 분석 결과 반환
+        # 응답 생성
         response = ConflictAnalysisResponse(
             status=analysis_result["status"],
             method=analysis_result["method"],
@@ -159,7 +159,6 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
     except Exception as e:
         logger.error(f"Unexpected error during conflict analysis: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during conflict analysis")
-
 
 
 @router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
