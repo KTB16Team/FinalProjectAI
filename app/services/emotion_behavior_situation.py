@@ -1,6 +1,7 @@
 import json
 import asyncio
 from typing import Dict, Any, List, Optional
+from dotenv import load_dotenv
 import os
 from datetime import datetime
 from langchain.prompts import ChatPromptTemplate
@@ -9,6 +10,8 @@ from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 import time
 from pathlib import Path
+
+
 
 env_path = Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
