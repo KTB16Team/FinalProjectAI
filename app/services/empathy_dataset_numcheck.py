@@ -23,8 +23,8 @@ def analyze_dialogue_dataset(data):
     
     print(f"총 대화 수: {total_dialogues}개")
     print("\n공감 점수 분포:")
-    print(f"낮음 (0.0-0.3): {empathy_ranges['low']}개")
-    print(f"중간 (0.4-0.7): {empathy_ranges['medium']}개")
+    print(f"낮음 (0.0-0.39): {empathy_ranges['low']}개")
+    print(f"중간 (0.4-0.79): {empathy_ranges['medium']}개")
     print(f"높음 (0.8-1.0): {empathy_ranges['high']}개")
     
 def load_and_analyze_dataset(file_path):

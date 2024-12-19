@@ -1,6 +1,7 @@
 # Python 3.12 베이스 이미지 사용
 FROM python:3.12-slim
 
+
 # 필요한 패키지 설치 (telnet 및 기타 도구)
 RUN apt-get update && \
     apt-get install -y telnet && \
