@@ -16,7 +16,6 @@ def run_worker_in_thread():
     asyncio.set_event_loop(loop)
     start_worker()
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -42,3 +41,4 @@ if __name__ == "__main__":
     import uvicorn
     logger.info("FastAPI application is starting...")
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

@@ -1,11 +1,12 @@
 # Python 3.12 베이스 이미지 사용
 FROM python:3.12-slim
 
-
-# 필요한 패키지 설치 (telnet 및 기타 도구)
-RUN apt-get update && \
-    apt-get install -y telnet && \
-    rm -rf /var/lib/apt/lists/* \
+# 시스템 패키지 설치
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    patch \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -14,9 +15,8 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-
 # 애플리케이션 소스 코드 복사
 COPY . .
 
 # FastAPI 서버 실행
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--lifespan", "on"]

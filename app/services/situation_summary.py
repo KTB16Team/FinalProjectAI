@@ -3,23 +3,14 @@ import os
 from dotenv import load_dotenv
 import openai
 from services.emotion_behavior_situation import RelationshipAnalyzer
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-import asyncio
 
 # Load OpenAI API Key
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 openai.api_key = OPENAI_API_KEY
 
-# OPENAI_API_KEY
-client = openai.OpenAI(
-    api_key = OPENAI_API_KEY,
-)
-
 # Analyzer 객체
-# analyzer = RelationshipAnalyzer
+analyzer = RelationshipAnalyzer()
 
 def situation_summary_GPT(text):
     entities = analyzer.analyze(text)
