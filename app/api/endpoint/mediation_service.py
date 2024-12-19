@@ -3,7 +3,7 @@ import ssl
 from fastapi import APIRouter, HTTPException, Header, status, BackgroundTasks
 from botocore.exceptions import ClientError
 from datetime import datetime
-from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest
+from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest, ConflictAnalysisRequest,ConflictAnalysisResponseData, ConflictAnalysisResponse
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 from services.audio_process import process_audio_file
 from services.image_process import process_image_file
@@ -11,12 +11,70 @@ from core.logging import setup_logger
 from core.config import settings
 import requests
 import pika
+from services.score_multi import ConflictAnalyzer
+import torch
 
 router = APIRouter()
 # logger = logging.getLogger("uvicorn")
 logger = setup_logger()
+conflict_analyzer = ConflictAnalyzer()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+@router.post("/analyze-conflict", response_model=ConflictAnalysisResponseData, status_code=201)
+async def analyze_conflict(request: ConflictAnalysisRequest):
+    logger.info(f"Received conflict analysis request: {request.dict()}")
 
+    if not request.content:
+        logger.error("CONTENT_NOT_PROVIDED")
+        raise HTTPException(status_code=400, detail="CONTENT_NOT_PROVIDED")
+
+    try:
+        # ConflictAnalyzer를 사용하여 내용 분석
+        analysis_result = await conflict_analyzer.analyze_content(
+            content=request.content,
+            request_id=request.id
+        )
+
+        if analysis_result["status"] != "success":
+            logger.error(f"Conflict analysis failed: {analysis_result.get('message', 'Unknown error')}")
+            raise HTTPException(status_code=500, detail="Conflict analysis failed")
+
+        # 백엔드 서버로 전송할 데이터 준비
+        backend_payload = analysis_result['data']
+
+        # 백엔드 서버 URL 설정 -> 이부분 수정해야 함
+        backend_server_url = os.getenv("BACKEND_SERVER_URL", "https://api.ktb-aimo.link//api/v1/private-posts/judgement/callback")
+
+        # 백엔드 서버로 데이터 전송
+        async with httpx.AsyncClient() as client:
+            backend_response = await client.post(backend_server_url, json=backend_payload)
+
+            if backend_response.status_code != 200:
+                logger.error(f"Failed to send data to backend server: {backend_response.status_code}")
+                raise HTTPException(status_code=502, detail="Failed to send data to backend server")
+
+        # 응답 생성
+        response = ConflictAnalysisResponse(
+            status=analysis_result["status"],
+            method=analysis_result["method"],
+            data=ConflictAnalysisResponseData(**analysis_result["data"])
+        )
+
+        logger.info(f"Conflict analysis successful: {response}")
+        return response
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error when communicating with backend server: {e}")
+        raise HTTPException(status_code=502, detail="Backend server error")
+    except httpx.RequestError as e:
+        logger.error(f"Request error when communicating with backend server: {e}")
+        raise HTTPException(status_code=503, detail="Backend server connection error")
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error: {e}")
+        raise HTTPException(status_code=500, detail="Invalid JSON response from ConflictAnalyzer")
+    except Exception as e:
+        logger.error(f"Unexpected error during conflict analysis: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during conflict analysis")
 
 @router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
 async def get_voice(request: STTRequest):
