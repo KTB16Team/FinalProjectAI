@@ -4,7 +4,7 @@ import httpx
 from sqlalchemy import text
 from datetime import datetime
 # from app.db.database import engine
-from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest, ConflictAnalysisRequest,ConflictAnalysisResponseData, ConflictAnalysisResponse, BehaviorClassificationRequest, BehaviorClassificationResponse,EmpathyRequest,EmpathyResponse, EmotionAnalysisRequest, EmotionAnalysisResponse
+from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest, ConflictAnalysisRequest,ConflictAnalysisResponseData, ConflictAnalysisResponse
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 import logging
 import torch
