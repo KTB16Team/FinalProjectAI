@@ -23,8 +23,9 @@ if __name__ == "__main__":
     import uvicorn
 
     # RabbitMQ 워커 실행
-    worker_thread = threading.Thread(target=run_worker_in_thread, daemon=True)
-    worker_thread.start()
+    start_worker()
+    # worker_thread = threading.Thread(target=run_worker_in_thread, daemon=True)
+    # worker_thread.start()
 
     # FastAPI 서버 실행
     uvicorn.run(app, host="0.0.0.0", port=8000)
