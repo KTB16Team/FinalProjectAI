@@ -36,6 +36,28 @@ jobs:
         #   ${{ secrets.env }}
         #   EOF
 
+      # 3. .env 파일 생성
+      - name: Create .env file
+        working-directory: app  # .env 파일을 생성할 디렉토리 설정
+        run: |
+          echo "${{ secrets.env }}" > .env
+        # 또는 멀티라인 시크릿을 정확하게 처리하려면 다음과 같이 할 수 있습니다:
+        # run: |
+        #   cat <<EOF > .env
+        #   ${{ secrets.env }}
+        #   EOF
+
+      # 3. .env 파일 생성
+      - name: Create .env file
+        working-directory: app/services  # .env 파일을 생성할 디렉토리 설정
+        run: |
+          echo "${{ secrets.env }}" > .env
+        # 또는 멀티라인 시크릿을 정확하게 처리하려면 다음과 같이 할 수 있습니다:
+        # run: |
+        #   cat <<EOF > .env
+        #   ${{ secrets.env }}
+        #   EOF
+
       # 3. Docker 이미지 빌드
       - name: Build Docker image
         working-directory: app  # `app` 디렉터리에서 실행
