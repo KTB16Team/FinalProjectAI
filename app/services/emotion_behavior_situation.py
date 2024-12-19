@@ -1,6 +1,7 @@
 import json
 import asyncio
 from typing import Dict, Any, List, Optional
+from dotenv import load_dotenv
 import os
 from datetime import datetime
 from langchain.prompts import ChatPromptTemplate
@@ -8,6 +9,12 @@ from langchain_openai import ChatOpenAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 import time
+from pathlib import Path
+
+
+
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # 스탠스 변화 부분 볼려면 인덱스 필요
 class DialogueLine(BaseModel):
@@ -540,84 +547,84 @@ class RelationshipAnalyzer:
             "analysis_timestamp": datetime.now().isoformat()
         }
   
-async def test_analysis():
-    start_time = time.time()
-    test_data = """
-    민수가 팀프로젝트 발표 중에 PPT가 안 넘어가자 화를 냈어. 지원이랑 영호는 민수를 진정시키려 했는데, 서연이는 오히려 민수한테 '네가 미리 점검했어야지'라면서 불편한 말을 했어.
-    """
-
-    analyzer = RelationshipAnalyzer()
-    
-    try:
-        print("분석 시작...")
-        result = await analyzer.analyze(test_data)
-
-        print("\n대화 라인:")
-        for line in result["dialogue_lines"]:
-            print(f"{line['index']}. {line['speaker']}: {line['text']}")
-        
-        print("\n제목:")
-        print(result["situation_summary"]["title"])
-
-        situation_summary = result["situation_summary"]
-        print("\n상황 요약:")
-        print(f"{situation_summary['situation_summary']}")
-        
-        print("\n상황 케이스들:")
-        for case in situation_summary["cases"]:
-            print(f"- 이벤트: {case['event']}")
-            print(f"  참여자: {case['participants']}")
-            print(f"  결과: {case['result']}")
-            print(f"  시간 프레임: {case['time_frame']}")
-            print(f"  상황 점수: {case['score']}\n")
-
-        print("\n스탠스 변화 지점:")
-        for action in result["stance_actions"]:
-            print(f"\n액션 인덱스 {action['index']}:")
-            print(f"액션 내용: {action['dialogue_text']}")
-            print(f"변화 주체: {action['party']}")
-            print(f"태도 분류: {action['stance_classification']}")
-            print(f"행동 평가 점수: {action['score']}")
-        
-        print("\n감정 영향 분석:")
-        emotional = result["emotional_analysis"]
-        
-        print("\nA가 B에게 미친 영향:")
-        a_to_b = emotional["a_to_b_impact"]
-        print(f"영향 점수: {a_to_b['impact_score']}")
-        print(f"감정 상태: {', '.join(a_to_b['emotional_state'])}")
-        print(f"영향 설명: {a_to_b['impact_description']}")
-        print(f"관련 대화 인덱스: {a_to_b['relevant_dialogue_indices']}")
-        
-        print("\nB가 A에게 미친 영향:")
-        b_to_a = emotional["b_to_a_impact"]
-        print(f"영향 점수: {b_to_a['impact_score']}")
-        print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
-        print(f"영향 설명: b_to_a['impact_description']")
-        print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
-
-        print("\n과실 비율:")
-        print(f"A의 과실 비율: {result['fault_ratios'] * 100:.2f}%")
-
-        print("\n판결문:")
-        print("\nA측 입장:")
-        print(result["judgement"]["A_position"])
-
-        print("\nB측 입장:")
-        print(result["judgement"]["B_position"])
-
-        print("\n결론:")
-        print(result["judgement"]["conclusion"])
-
-        end_time = time.time()
-
-        # 소요 시간 계산
-        elapsed_time = end_time - start_time
-        print(f"Elapsed time: {elapsed_time} seconds")
-
-    except Exception as e:
-        print(f"에러 발생: {str(e)}")
-        raise
+# async def test_analysis():
+#     start_time = time.time()
+#     test_data = """
+#     민수가 팀프로젝트 발표 중에 PPT가 안 넘어가자 화를 냈어. 지원이랑 영호는 민수를 진정시키려 했는데, 서연이는 오히려 민수한테 '네가 미리 점검했어야지'라면서 불편한 말을 했어.
+#     """
+#
+#     analyzer = RelationshipAnalyzer()
+#
+#     try:
+#         print("분석 시작...")
+#         result = await analyzer.analyze(test_data)
+#
+#         print("\n대화 라인:")
+#         for line in result["dialogue_lines"]:
+#             print(f"{line['index']}. {line['speaker']}: {line['text']}")
+#
+#         print("\n제목:")
+#         print(result["situation_summary"]["title"])
+#
+#         situation_summary = result["situation_summary"]
+#         print("\n상황 요약:")
+#         print(f"{situation_summary['situation_summary']}")
+#
+#         print("\n상황 케이스들:")
+#         for case in situation_summary["cases"]:
+#             print(f"- 이벤트: {case['event']}")
+#             print(f"  참여자: {case['participants']}")
+#             print(f"  결과: {case['result']}")
+#             print(f"  시간 프레임: {case['time_frame']}")
+#             print(f"  상황 점수: {case['score']}\n")
+#
+#         print("\n스탠스 변화 지점:")
+#         for action in result["stance_actions"]:
+#             print(f"\n액션 인덱스 {action['index']}:")
+#             print(f"액션 내용: {action['dialogue_text']}")
+#             print(f"변화 주체: {action['party']}")
+#             print(f"태도 분류: {action['stance_classification']}")
+#             print(f"행동 평가 점수: {action['score']}")
+#
+#         print("\n감정 영향 분석:")
+#         emotional = result["emotional_analysis"]
+#
+#         print("\nA가 B에게 미친 영향:")
+#         a_to_b = emotional["a_to_b_impact"]
+#         print(f"영향 점수: {a_to_b['impact_score']}")
+#         print(f"감정 상태: {', '.join(a_to_b['emotional_state'])}")
+#         print(f"영향 설명: {a_to_b['impact_description']}")
+#         print(f"관련 대화 인덱스: {a_to_b['relevant_dialogue_indices']}")
+#
+#         print("\nB가 A에게 미친 영향:")
+#         b_to_a = emotional["b_to_a_impact"]
+#         print(f"영향 점수: {b_to_a['impact_score']}")
+#         print(f"감정 상태: {', '.join(b_to_a['emotional_state'])}")
+#         print(f"영향 설명: b_to_a['impact_description']")
+#         print(f"관련 대화 인덱스: {b_to_a['relevant_dialogue_indices']}")
+#
+#         print("\n과실 비율:")
+#         print(f"A의 과실 비율: {result['fault_ratios'] * 100:.2f}%")
+#
+#         print("\n판결문:")
+#         print("\nA측 입장:")
+#         print(result["judgement"]["A_position"])
+#
+#         print("\nB측 입장:")
+#         print(result["judgement"]["B_position"])
+#
+#         print("\n결론:")
+#         print(result["judgement"]["conclusion"])
+#
+#         end_time = time.time()
+#
+#         # 소요 시간 계산
+#         elapsed_time = end_time - start_time
+#         print(f"Elapsed time: {elapsed_time} seconds")
+#
+#     except Exception as e:
+#         print(f"에러 발생: {str(e)}")
+#         raise
 
 if __name__ == "__main__":
     asyncio.run(test_analysis())

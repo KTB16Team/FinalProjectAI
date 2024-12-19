@@ -1,4 +1,4 @@
-# IntelliJ IDEA specific files
+
 .idea/vcs.xml
 .idea/workspace.xml
 
@@ -17,3 +17,4 @@ app/services/ptfiles/Behavior_classifier.pt
 app/services/ptfiles/BERTbasedemotion_model.pt
 app/services/ptfiles/best_model.pt
 app/core/.env
+
