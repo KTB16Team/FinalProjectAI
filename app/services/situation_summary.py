@@ -31,7 +31,7 @@ client = openai.OpenAI(
     api_key = OPENAI_API_KEY,
 )
 
-analyzer = RelationshipAnalyzer
+# analyzer = RelationshipAnalyzer
     
 def test_response(ref_text):
     llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.3)
