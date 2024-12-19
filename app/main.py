@@ -22,9 +22,18 @@ def run_worker_in_thread():
 if __name__ == "__main__":
     import uvicorn
 
-    # RabbitMQ 워커 실행
-    worker_thread = threading.Thread(target=run_worker_in_thread, daemon=True)
-    worker_thread.start()
+    # # RabbitMQ 워커 실행
+    # worker_thread = threading.Thread(target=run_worker_in_thread, daemon=True)
+    # worker_thread.start()
 
     # FastAPI 서버 실행
     uvicorn.run(app, host="0.0.0.0", port=8000)
+    #임시
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    FastAPI 앱 시작 시 RabbitMQ 워커를 별도 스레드에서 실행
+    """
+    worker_thread = threading.Thread(target=run_worker_in_thread, daemon=True)
+    worker_thread.start()
