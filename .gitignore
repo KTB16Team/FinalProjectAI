@@ -1,13 +1,20 @@
 
 .idea/vcs.xml
 .idea/workspace.xml
-app/services/Behavior_classifier.pt
-app/services/emotion_classifier.pt
-app/services/empathy_bestmodel.pt
-best_model.pt
-Behavior_classifier.pt
-BERTbasedemotion_model.pt
-worst.pt
-app/.DS_Store
-.DS_Store
-.env
+
+# Python virtual environment
+/venv
+
+# Cache files
+**/__pycache__/
+**/*.py[cod]
+
+# Environment variables
+app/.env
+.vscode/settings.json
+app/services/ptfiles/Behavior_classifier.pt
+app/services/ptfiles/Behavior_classifier.pt
+app/services/ptfiles/BERTbasedemotion_model.pt
+app/services/ptfiles/best_model.pt
+app/core/.env
+
