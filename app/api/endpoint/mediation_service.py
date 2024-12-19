@@ -405,7 +405,6 @@ def process_message(ch, method, properties, body):
         decoded_body = body.decode('utf-8')
         logger.info(f"Received message: {decoded_body}")
         # 메시지 처리 로직 추가
-        ch.basic_ack(delivery_tag=method.delivery_tag)  # 메시지 확인
         message = json.loads(decoded_body)
         content = message.get("content")
         request_id = message.get("id")
@@ -422,8 +421,8 @@ def process_message(ch, method, properties, body):
 
     except Exception as e:
         logger.error(f"Error processing message: {e}")
-        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # 실패 메시지 재시도 방지
-
+        # 실패 메시지 재시도 방지
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 port = 5671
 # vhost = "/"
 rabbitmq_url = f"amqps://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_URL}:{port}"
