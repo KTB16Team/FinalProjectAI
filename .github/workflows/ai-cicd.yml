@@ -91,7 +91,7 @@ jobs:
               -e RABBITMQ_USER=${{ secrets.RABBITMQ_USER }} \
               -e RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }} \
               -e LOGSTASH_HOST=${{ secrets.LOGSTASH_HOST }} \
-              -v /home/${{ secrets.EC2_USER }}/models/:/app/services/ \
+              -v /home/${{ secrets.EC2_USER }}/models/:/app/services/ptfiles \
               ${{ secrets.ECR_REGISTRY }}:latest
 
       # 4. 헬스 체크 - 컨테이너가 실행 중인지 확인

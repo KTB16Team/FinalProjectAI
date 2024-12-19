@@ -20,8 +20,8 @@ load_dotenv(dotenv_path=env_path)
 
 class Config:
     MAX_LENGTH = 256
-    EMOTION_MODEL_PATH = "app/services/BERTbasedemotion_model.pt"
-    BEHAVIOR_MODEL_PATH = "app/services/Behavior_classifier.pt"
+    EMOTION_MODEL_PATH = "app/services/ptfiles/BERTbasedemotion_model.pt"
+    BEHAVIOR_MODEL_PATH = "app/services/ptfiles/Behavior_classifier.pt"
     NUM_LABELS = 5
     GPT_MODEL = "gpt-4"
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
