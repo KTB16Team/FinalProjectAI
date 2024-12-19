@@ -15,11 +15,10 @@ from transformers import BertTokenizer, AutoTokenizer, AutoModel
 from services.empathy_score import DialogueEmpathyModel
 from services.BERTbasedcontext import EmotionAnalyzer
 from services.test_behavior_classification import CustomBERTClassifier, Config
-# from app.services.emotion_behavior_situation import RelationshipAnalyzer
+
 router = APIRouter()
 logger = logging.getLogger("uvicorn")
 
-analyzer = RelationshipAnalyzer()
 conflict_analyzer = ConflictAnalyzer()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # model = None
