@@ -25,10 +25,21 @@ jobs:
           # Docker CLI를 사용하여 ECR 레지스트리에 로그인
           aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
+      # 3. .env 파일 생성
+      - name: Create .env file
+        working-directory: app  # .env 파일을 생성할 디렉토리 설정
+        run: |
+          echo "${{ secrets.env }}" > .env
+        # 또는 멀티라인 시크릿을 정확하게 처리하려면 다음과 같이 할 수 있습니다:
+        # run: |
+        #   cat <<EOF > .env
+        #   ${{ secrets.env }}
+        #   EOF
+
       # 3. Docker 이미지 빌드
       - name: Build Docker image
         working-directory: app  # `app` 디렉터리에서 실행
-        run: docker build -t ai-service --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} .  # OPENAI_API_KEY를 빌드 인자로 전달
+        run: docker build -t ai-service
 
       # 4. ECR에 푸시할 이미지 태그 추가
       - name: Tag Docker image for ECR
@@ -83,14 +94,6 @@ jobs:
             # 새로운 Docker 컨테이너 실행 (환경변수 설정 포함)
             docker run -d -p 8000:8000 \
               --name ai-service \
-              -e CALLBACK_URL=${{ secrets.CALLBACK_URL }} \
-              -e ACCESSTOKEN=${{ secrets.ACCESSTOKEN }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
-              -e RABBITMQ_URL=${{ secrets.RABBITMQ_URL }} \
-              -e RABBITMQ_USER=${{ secrets.RABBITMQ_USER }} \
-              -e RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }} \
-              -e LOGSTASH_HOST=${{ secrets.LOGSTASH_HOST }} \
               -v /home/${{ secrets.EC2_USER }}/models/:/app/services/ptfiles \
               ${{ secrets.ECR_REGISTRY }}:latest
 
