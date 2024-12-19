@@ -12,3 +12,4 @@
 # Environment variables
 app/.env
 .vscode/settings.json
+app/services/ptfiles/Behavior_classifier.pt
