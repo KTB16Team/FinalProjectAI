@@ -40,4 +40,4 @@ def setup_logger():
     return logger_adapter
 
 # 글로벌 로거 설정
-
+logger = setup_logger()

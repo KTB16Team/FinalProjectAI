@@ -7,17 +7,17 @@ from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STT
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 from services.audio_process import process_audio_file
 from services.image_process import process_image_file
-from core.logging import setup_logger
+from core.logging import logger
 from core.config import settings
 import requests
 import pika
-from services.score_multi import ConflictAnalyzer
+# from services.score_multi import ConflictAnalyzer
 import torch
 
 router = APIRouter()
 # logger = logging.getLogger("uvicorn")
-logger = setup_logger()
-conflict_analyzer = ConflictAnalyzer()
+
+# conflict_analyzer = ConflictAnalyzer()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 @router.post("/analyze-conflict", response_model=ConflictAnalysisResponseData, status_code=201)
@@ -144,6 +144,8 @@ async def get_image(request: STTRequest):
     )
     logger.info(f"Response: {response}")
     return response
+
+
 #동기식 함수
 # @router.post("/judgement", response_model=DataInfoSummary, status_code=201)
 # async def process_judge(request: JudgeRequest):
