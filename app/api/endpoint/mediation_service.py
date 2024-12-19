@@ -425,7 +425,7 @@ def process_message(ch, method, properties, body):
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # 실패 메시지 재시도 방지
 
 port = 5671
-vhost = "/"
+# vhost = "/"
 rabbitmq_url = f"amqps://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_URL}:{port}"
 
 def start_worker():
