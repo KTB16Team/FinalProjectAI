@@ -58,11 +58,11 @@ class ConflictAnalysisResponse(BaseModel):
 # class BehaviorClassificationRequest(BaseModel):
 #     text: str
 
-# class BehaviorClassificationResponse(BaseModel):
-#     success: bool
-#     behavior_type: str
-#     confidence: float
-#     confidence_level: str
+class BehaviorClassificationResponse(BaseModel):
+    success: bool
+    behavior_type: str
+    confidence: float
+    confidence_level: str
 
 
 # class EmpathyRequest(BaseModel):

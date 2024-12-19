@@ -13,7 +13,6 @@ import numpy as np
 from services.score_multi import ConflictAnalyzer
 from transformers import BertTokenizer, AutoTokenizer, AutoModel
 from services.empathy_score import DialogueEmpathyModel
-from services.emotion_behavior_situation import RelationshipAnalyzer
 from services.BERTbasedcontext import EmotionAnalyzer
 from services.test_behavior_classification import CustomBERTClassifier, Config
 # from app.services.emotion_behavior_situation import RelationshipAnalyzer
