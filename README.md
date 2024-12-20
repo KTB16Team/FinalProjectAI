@@ -23,7 +23,7 @@ Aimo는 음성 및 텍스트 데이터를 AI 모델로 분석하여 갈등의 �
 ### **1. 행동 분류 모델**
 
 - **파일**: `behavior_classification.py`
-- **기능**: 사용자의 대화 속에서 행동 유형을 분류하여 갈등의 구체적인 원인을 파악.
+- **기능**: 사용자의 대화 속에서 행동 유형을 분류하여 갈등의 구체적인 원인을 파악
 - **분류 카테고리**: 경쟁형/회피형/수용형/타협형/협력형
 - **config**:
   - MAX_LENGTH: 256
@@ -89,7 +89,7 @@ Aimo는 음성 및 텍스트 데이터를 AI 모델로 분석하여 갈등의 �
 ### **2. 문맥 및 감정 점수 모델**
 
 - **파일**: `BERTbasedcontext.py`
-- **기능**: 대화의 문맥과 감정을 분석하여 상황의 심각성을 점수화.
+- **기능**: 대화의 문맥과 감정을 분석하여 상황의 심각성을 점수화
 - **text augmentation**
   - Random Insertion
     - 임의의 단어를 문장 내에 삽입하여 문장의 다양성 증가
@@ -137,7 +137,7 @@ Aimo는 음성 및 텍스트 데이터를 AI 모델로 분석하여 갈등의 �
 ### **3. 공감 점수 측정 모델**
 
 - **파일**: 'empathy_data_preprocessig.py', `empathy_score.py.py`
-- **기능**: 대화에서 상대방에 대한 공감을 점수화하여 협력 가능성 평가.
+- **기능**: 대화에서 상대방에 대한 공감을 점수화하여 협력 가능성 평가
 - **text augmentation**
   - Random deletion
     - 문장에서 임의의 단어 삭제
@@ -206,7 +206,7 @@ def compute_empathy_score(dialogues: List[str]):
 ### **4. 모델 통합 및 과실 비율 산출**
 
 - **파일**: 'score_multi.py'
-- **기능**: 3개의 모델의 결과를 통합하여 최종 과실 비율 산출.
+- **기능**: 3개의 모델의 결과를 통합하여 최종 과실 비율 산출
 - **핵심 로직**: 상황 분석 및 요약 -> 행동 분류 -> 문맥 감정 -> 공감 점수 -> 최종 판결문 출력 
 - **상황 분석** (SituationAnalyzer)
   - 기능: 갈등 텍스트를 분석하여 주요 상황과 각 상황의 중요도를 계산하고 관련 문장 추출
@@ -273,7 +273,7 @@ class SituationAnalyzer:
   - 클래스: SentenceEmotionAnalyzer
 - **과실 비율 계산 (Fault Ratio Calculation)**
   - ConflictAnalyzer
-  - 기능: 감정 점수, 행동 점수, 상황 중요도를 기반으로 원고와 피고의 과실 비율을 계산.
+  - 기능: 감정 점수, 행동 점수, 상황 중요도를 기반으로 원고와 피고의 과실 비율을 계산
   - 핵심 로직
     ```python
     async def analyze_content(self, content: str) -> dict:
@@ -313,7 +313,7 @@ class SituationAnalyzer:
 - **파일**: 'audio_process.py', 'download_s3_file.py'
 - **사용된 라이브러리**: OpenAI Whisper, Boto3
 - **엔드 포인트**: /speech-to-text
-- **기능**: S3에 저장된 음성 파일을 다운로드하여 텍스트로 변환.
+- **기능**: S3에 저장된 음성 파일을 다운로드하여 텍스트로 변환
 - **핵심 로직**:
  ```python
   async def download_s3_file(url):
@@ -394,7 +394,7 @@ class SituationAnalyzer:
 
 ### **주요 비동기 처리 흐름**
 - **RabbitMQ 기반 비동기 처리**
-  - 기능: RabbitMQ 메시지 큐를 사용하여 AI 모델을 호출하고 결과 처리'
+  - 기능: RabbitMQ 메시지 큐를 사용하여 AI 모델을 호출하고 결과 처리
   - 핵심 로직:
   ```python
   def process_message(ch, method, properties, body):
@@ -423,7 +423,7 @@ class SituationAnalyzer:
   ```
 
 - **BackgroundTasks 처리**
-  - 기능: FastAPI BackgroundTasks를 사용하여 비동기적으로 결과를 처리하고 콜백 URL에 POST 요청.
+  - 기능: FastAPI BackgroundTasks를 사용하여 비동기적으로 결과를 처리하고 콜백 URL에 POST 요청
   - 핵심 로직:
 ```python
   @router.post("/judgement", status_code=202)
