@@ -7,6 +7,7 @@ from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STT
 from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
 from services.audio_process import process_audio_file
 from services.image_process import process_image_file
+from services.score_multi import process_request
 from core.logging import logger
 from core.config import settings
 import requests
@@ -378,6 +379,53 @@ def execute_test_response_and_callback(content: str, id: int):
     try:
         # test_response 실행
         logger.info("Executing test_response function...")
+        entities = process_request(content)
+
+        # 필수 필드 검증
+        required_fields = [
+            "title", "stance_plaintiff", "stance_defendant",
+            "situation_summary", "judgement", "fault_rate"
+        ]
+        missing_fields = [field for field in required_fields if field not in entities]
+
+        if missing_fields:
+            logger.error(f"Missing fields in GPT response: {missing_fields}")
+            DataInfoSummary = {
+                "status": False,
+                "id": id
+            }
+        else:
+            DataInfoSummary = {
+                "status": True,
+                "accessKey": ACCESSTOKEN,
+                "id": id,
+                "title": entities.get("title"),
+                "stancePlaintiff": entities.get("stance_plaintiff"),
+                "stanceDefendant": entities.get("stance_defendant"),
+                "summaryAi": entities.get("situation_summary"),
+                "judgement": entities.get("judgement"),
+                "faultRate": entities.get("fault_rate")
+            }
+
+        # POST 결과를 CALLBACK_URL로 전송
+        logger.info(f"Sending POST request to DataInfoSummary: {DataInfoSummary}")
+        logger.info(f"Sending POST request to CALLBACK_URL: {CALLBACK_URL}")
+        response = requests.post(CALLBACK_URL, json=DataInfoSummary)
+        logger.info(f"Callback response: {response.status_code}, {response.text}")
+
+    except Exception as e:
+        logger.error(f"Error during processing: {e}")
+        # 실패한 경우 콜백 URL로 에러 메시지 전송
+        error_response = {"status": "error", "message": str(e)}
+        requests.post(CALLBACK_URL, json=error_response)
+
+def execute_score_multi_and_callback(content: str, id: int):
+    """
+    test_response 호출 후 결과를 CALLBACK_URL로 전송
+    """
+    try:
+        # test_response 실행
+        logger.info("Executing test_response function...")
         entities = test_response(content)
 
         # 필수 필드 검증
@@ -435,7 +483,7 @@ def process_message(ch, method, properties, body):
             raise ValueError("Invalid message: Missing 'content' or 'id'")
 
         # test_response 실행 및 콜백 전송
-        execute_test_response_and_callback(content, request_id)
+        execute_score_multi_and_callback(content, request_id)
 
         # 메시지 처리 완료
         ch.basic_ack(delivery_tag=method.delivery_tag)
