@@ -117,6 +117,7 @@ jobs:
             docker run -d -p 8000:8000 \
               --name ai-service \
               -v /home/${{ secrets.EC2_USER }}/models/:/app/services/ptfiles \
+              -v /home/${{ secrets.EC2_USER }}/logs/:/app/logs/ \
               ${{ secrets.ECR_REGISTRY }}:latest
 
       # 4. 헬스 체크 - 컨테이너가 실행 중인지 확인

@@ -1,13 +1,13 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from logstash import TCPLogstashHandler
+#from logstash import TCPLogstashHandler
 from core.config import settings
 # 로그 파일 경로
 LOG_FILE = "logs/app.log"
 
 # Logstash 서버 정보
-LOGSTASH_HOST = settings.LOGSTASH_HOST  # Logstash 서버 IP 또는 도메인
-LOGSTASH_PORT = 5045                 # Logstash에서 수신하는 TCP 포트
+#LOGSTASH_HOST = settings.LOGSTASH_HOST  # Logstash 서버 IP 또는 도메인
+#LOGSTASH_PORT = 5045                 # Logstash에서 수신하는 TCP 포트
 
 # 로깅 설정 함수
 def setup_logger():
@@ -30,8 +30,8 @@ def setup_logger():
     logger.addHandler(console_handler)
 
     # Logstash 핸들러 추가
-    logstash_handler = TCPLogstashHandler(host=LOGSTASH_HOST, port=LOGSTASH_PORT, version=1)
-    logger.addHandler(logstash_handler)
+    #logstash_handler = TCPLogstashHandler(host=LOGSTASH_HOST, port=LOGSTASH_PORT, version=1)
+    #logger.addHandler(logstash_handler)
 
     # LoggerAdapter 생성
     extra = {'application_name': 'python_server'}
