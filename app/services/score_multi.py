@@ -10,7 +10,7 @@ from openai import AsyncOpenAI
 import asyncio
 import sys
 import os
-
+from core.logging import logger
 from services.BERTbasedcontext import EmotionAnalyzer
 
 env_path = Path(__file__).resolve().parent.parent / '.env'
@@ -177,94 +177,117 @@ class ConflictAnalyzer:
                 temperature=0.2
             )
             basic_info = json.loads(summary_response.choices[0].message.content)
+
+            required_fields = ["title", "stancePlaintiff", "stanceDefendant", "summary"]
+            missing_fields = [field for field in required_fields if field not in basic_info]
+            if missing_fields:
+                return {
+                    "status": "error",
+                    "method": "GPT",
+                    "id": request_id,
+                    "message": f"Missing fields in response: {missing_fields}"
+                }
         except Exception as e:
-            print(f"Error in summary generation: {e}")
-            return {"status": "error", "message": "Failed to generate summary"}
-
-        situation_data = await self.situation_analyzer.analyze_text(content)
-        
-        speaker_scores = {"plaintiff": 0, "defendant": 0}
-        total_importance = 0
-        
-        for situation, data in situation_data.items():
-            sentences = data["sentences"]
-            importance = data["importance"]
-            total_importance += importance
-
-            emotion_scores = self.emotion_analyzer.analyze_sentences(sentences)
-            behavior_scores = predict_category_scores(
-                sentences, 
-                self.behavior_model, 
-                self.tokenizer, 
-                self.label_map, 
-                self.device
-            )
-            
-            for i, (e_score, b_score) in enumerate(zip(emotion_scores, behavior_scores)):
-                sentence_score = e_score * b_score * importance
-                
-                sentence = sentences[i]
-                if "내가" in sentence or "나는" in sentence or "나의" in sentence or "내" in sentence:
-                    speaker_scores["plaintiff"] += sentence_score
-                else:
-                    speaker_scores["defendant"] += sentence_score
-
-        total_score = speaker_scores["plaintiff"] + speaker_scores["defendant"]
-        
-        if total_score > 0:
-            fault_rate = round((speaker_scores["plaintiff"] / total_score) * 100,2)
-            fault_rate = max(0, min(100, fault_rate))
-        else:
-            fault_rate = 50.0 
-        
-        judgment_prompt = f"""You are a warm and empathetic psychological counselor like Dr. Oh Eunyeong. 
-        Analyze the following conflict situation, understand the psychology of both parties, and provide advice for healing and reconciliation.
-
-        When presenting, please follow these guidelines:
-        1. First, empathize with the client's emotions and let them know that these feelings are natural and valid.
-        2. Carefully acknowledge the other party's perspective, but clearly point out their mistakes.
-        3. Suggest specific conversation methods or behaviors to resolve the issue.
-        4. Conclude with warm words of encouragement.
-        Please print the output in Korean.
-        Please do not include characters like "\n" outside of text.
-
-        [Summary of the situation]
-        {basic_info['summary']}
-
-        [Analyzed situations]
-        {json.dumps(situation_data, ensure_ascii=False, indent=2)}
-
-        [Fault Ratio]
-        Plaintiff's fault ratio: {fault_rate:.2f}%
-
-        Based on the above information, write a paragraph-long response from the counselor.
-        Take a deep breath and step by step"""
+            logger.error(f"Error in summary generation: {e}")
+            return {
+                "status": "error",
+                "method": "GPT",
+                "id": request_id,
+                "message": "Failed to generate summary"
+            }
 
         try:
-            judgment_response = await self.client.chat.completions.create(
-                model=Config.GPT_MODEL,
-                messages=[{"role": "user", "content": judgment_prompt}],
-                temperature=0.2
-            )
-            judgment = judgment_response.choices[0].message.content
-        except Exception as e:
-            print(f"Error in judgment generation: {e}")
-            judgment = "판단 생성 중 오류가 발생했습니다."
+            situation_data = await self.situation_analyzer.analyze_text(content)
+            
+            speaker_scores = {"plaintiff": 0, "defendant": 0}
+            total_importance = 0
+            
+            for situation, data in situation_data.items():
+                sentences = data["sentences"]
+                importance = data["importance"]
+                total_importance += importance
 
-        return {
-            "status": "success",
-            "method": "GPT",
-            "data": {
+                emotion_scores = self.emotion_analyzer.analyze_sentences(sentences)
+                behavior_scores = predict_category_scores(
+                    sentences, 
+                    self.behavior_model, 
+                    self.tokenizer, 
+                    self.label_map, 
+                    self.device
+                )
+                
+                for i, (e_score, b_score) in enumerate(zip(emotion_scores, behavior_scores)):
+                    sentence_score = e_score * b_score * importance
+                    
+                    sentence = sentences[i]
+                    if "내가" in sentence or "나는" in sentence or "나의" in sentence or "내" in sentence:
+                        speaker_scores["plaintiff"] += sentence_score
+                    else:
+                        speaker_scores["defendant"] += sentence_score
+
+            total_score = speaker_scores["plaintiff"] + speaker_scores["defendant"]
+            
+            if total_score > 0:
+                fault_rate = round((speaker_scores["plaintiff"] / total_score) * 100,2)
+                fault_rate = max(0, min(100, fault_rate))
+            else:
+                fault_rate = 50.0 
+            
+            judgment_prompt = f"""You are a warm and empathetic psychological counselor like Dr. Oh Eunyeong. 
+            Analyze the following conflict situation, understand the psychology of both parties, and provide advice for healing and reconciliation.
+
+            When presenting, please follow these guidelines:
+            1. First, empathize with the client's emotions and let them know that these feelings are natural and valid.
+            2. Carefully acknowledge the other party's perspective, but clearly point out their mistakes.
+            3. Suggest specific conversation methods or behaviors to resolve the issue.
+            4. Conclude with warm words of encouragement.
+            Please print the output in Korean.
+            Please do not include characters like "\n" outside of text.
+
+            [Summary of the situation]
+            {basic_info['summary']}
+
+            [Analyzed situations]
+            {json.dumps(situation_data, ensure_ascii=False, indent=2)}
+
+            [Fault Ratio]
+            Plaintiff's fault ratio: {fault_rate:.2f}%
+
+            Based on the above information, write a paragraph-long response from the counselor.
+            Take a deep breath and step by step"""
+
+            try:
+                judgment_response = await self.client.chat.completions.create(
+                    model=Config.GPT_MODEL,
+                    messages=[{"role": "user", "content": judgment_prompt}],
+                    temperature=0.2
+                )
+                judgment = judgment_response.choices[0].message.content
+            except Exception as e:
+                print(f"Error in judgment generation: {e}")
+                judgment = "판단 생성 중 오류가 발생했습니다."
+
+            return {
+                "status": True,       
+                "accessKey": "dwqdq",  # accessKey 추가
                 "id": request_id,
                 "title": basic_info["title"],
                 "stancePlaintiff": basic_info["stancePlaintiff"],
                 "stanceDefendant": basic_info["stanceDefendant"],
                 "summaryAi": basic_info["summary"],
                 "judgement": judgment,
-                "faultRate": fault_rate
+                "faultRate": float(fault_rate)
+            
             }
-        }
-
+        except Exception as e:
+            logger.error(f"Error in analysis: {e}")
+            return {
+                "status": "error",
+                "method": "GPT",
+                "id": request_id,
+                "message": str(e)
+            }
+        
 async def process_request(request_data: dict) -> dict:
     analyzer = ConflictAnalyzer()
     result = await analyzer.analyze_content(
