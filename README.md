@@ -33,6 +33,13 @@ Aimo는 음성 및 텍스트 데이터를 AI 모델로 분석하여 갈등의 �
   - NUM_LABELS: 5
   - PATIENCE: 5
   - WEIGHT_DECAY: 0.01
+- **text augmentation**
+  - EDA
+    - 단어 삭제, 교체, 추가, 순서 변경
+  - 유사 임베딩 대체
+    - 단어 임베딩 유사도 기반 대체
+  - Contetualized Embedding 대체
+    - 문맥 기반 단어 대체
 - **📂 데이터셋 예시**:
   - 총 3,869개 (경쟁형:771개/회피형:759개/수용형:786개/타협형:767개/협력형:786개) -> 증강 후 21665개
 문맥 및 감정 점수 모델에서 사용된 데이터셋(`behavior_dataset.json`)의 일부 예시는 다음과 같습니다:
@@ -83,6 +90,11 @@ Aimo는 음성 및 텍스트 데이터를 AI 모델로 분석하여 갈등의 �
 
 - **파일**: `BERTbasedcontext.py`
 - **기능**: 대화의 문맥과 감정을 분석하여 상황의 심각성을 점수화.
+- **text augmentation**
+  - Random Insertion
+    - 임의의 단어를 문장 내에 삽입하여 문장의 다양성 증가
+  - Add Noise
+    - 문자 수준에서 노이즈를 추가해 모델의 견고성 향상
 - **📂 데이터셋 예시**:
   - 총 943개 -> 증강 후 2829개
 문맥 및 감정 점수 모델에서 사용된 데이터셋(`BERT-based_dataset.json`)의 일부 예시는 다음과 같습니다:
@@ -125,6 +137,20 @@ Aimo는 음성 및 텍스트 데이터를 AI 모델로 분석하여 갈등의 �
 
 - **파일**: 'empathy_data_preprocessig.py', `empathy_score.py.py`
 - **기능**: 대화에서 상대방에 대한 공감을 점수화하여 협력 가능성 평가.
+- **text augmentation**
+  - Random deletion
+    - 문장에서 임의의 단어 삭제
+ - Random swap
+    - 문장 내 임의의 두단어의 위치를 교환하여 문장의 구조 변형
+ - Random insertion
+    - 문장 내 임의의 위치에 단어 삽입하여 다양성 증가시킴
+ - Synonym replacement
+   - init에서 한국어 단어와 유사어 리스트를 사전 형태로 저장함
+   - 단순 사전 기반으로 단어를 유사어로 치환하여 문장의 의미 보존해 다양성 증가
+ - Noise Injection
+    - 텍스트에 노이즈 주입해 견고성 향상시킴
+ - augment text
+    - 여러 증강 기법 조합해 텍스트 변형
 - **📂 데이터셋 예시**:
  - 원본 데이터 크기: 2,692개 대화 -> 증강 후 데이터 크기: 14787
 문맥 및 감정 점수 모델에서 사용된 데이터셋(`empathy_dataset.json`)의 일부 예시는 다음과 같습니다:
