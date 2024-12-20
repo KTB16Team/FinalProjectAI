@@ -79,7 +79,7 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
         logger.error(f"Unexpected error during conflict analysis: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during conflict analysis")
 
-@router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
+@router.post("/speech-to-text", response_model=dict, status_code=201)
 async def get_voice(request: STTRequest):
     logger.info("get_infos start")
     logger.info(f"audio URL : {request.url}")
@@ -128,7 +128,7 @@ async def get_voice(request: STTRequest):
     # logger.info(f"Response: {response}")
     # return response
 
-@router.post("/image-to-text", response_model=VoiceInfo, status_code=201)
+@router.post("/image-to-text", response_model=dict, status_code=201)
 async def get_image(request: STTRequest):
     logger.info("get_infos start")
     logger.info(f"image URL : {request.url}")
@@ -137,6 +137,7 @@ async def get_image(request: STTRequest):
         raise HTTPException(status_code=400, detail="URL_NOT_PROVIDED")
 
     try:
+        # 비동기 처리로 S3에서 음성 파일 다운로드 및 텍스트 변환
         # 비동기 처리로 S3에서 음성 파일 다운로드 및 텍스트 변환
         transcription = await process_image_file(request.url)
         logger.info(transcription)
