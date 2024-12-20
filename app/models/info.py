@@ -3,6 +3,12 @@ from typing import Optional, Union, List
 from datetime import datetime, date
 from services.emotion_behavior_situation import RelationshipAnalyzer, SituationSummary
 
+class DataInfoOCR(BaseModel):
+    status: bool
+    url: str
+    script: Optional[str]
+    accessKey: str
+
 class DataInfoSTT(BaseModel):
     script: Optional[str]
 
@@ -15,7 +21,7 @@ class DataInfoSummary(BaseModel):
     summaryAi: Optional[str]
     judgement: Optional[str]
     faultRate: Optional[float]
-    accesstoken: str
+    accessKey: str
 
 class VoiceInfo(BaseModel):
     status: Optional[str]

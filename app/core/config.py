@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     # DATABASE_URL: str = " "
     OPENAI_API_KEY: str = ""
     CALLBACK_URL: str = ""
+    OCR_CALLBACK_URL: str = ""
     ACCESSTOKEN: str = ""
     #MQ
     RABBITMQ_URL: str = ""

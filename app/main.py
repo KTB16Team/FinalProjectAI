@@ -4,7 +4,7 @@ from api.endpoint.prometheus import router as prometheus_router
 from core.config import settings
 import asyncio
 import threading
-from api.endpoint.mediation_service import start_worker
+from api.endpoint.mediation_service import start_worker, start_second_worker
 from contextlib import asynccontextmanager
 from core.logging import logger
 
@@ -16,6 +16,14 @@ def run_worker_in_thread():
     asyncio.set_event_loop(loop)
     start_worker()
 
+def run_second_worker_in_thread():
+    """
+    두 번째 RabbitMQ 워커를 별도 스레드에서 실행
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    start_second_worker()  # 두 번째 워커 실행
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -25,6 +33,11 @@ async def lifespan(app: FastAPI):
     worker_thread = threading.Thread(target=run_worker_in_thread, daemon=True)
     worker_thread.start()
     logger.info("RabbitMQ worker thread started.")
+
+    # 두 번째 워커 실행
+    second_worker_thread = threading.Thread(target=run_second_worker_in_thread, daemon=True)
+    second_worker_thread.start()
+    logger.info("Second OCR RabbitMQ worker thread started.")
 
     yield  # 애플리케이션 실행 유지
 

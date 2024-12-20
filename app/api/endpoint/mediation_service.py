@@ -3,8 +3,9 @@ import ssl
 from fastapi import APIRouter, HTTPException, Header, status, BackgroundTasks
 from botocore.exceptions import ClientError
 from datetime import datetime
-from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT,JudgeRequest,STTRequest, ConflictAnalysisRequest,ConflictAnalysisResponseData, ConflictAnalysisResponse
-from services.situation_summary import situation_summary_GPT,stt_model,generate_response,test_response
+from pydantic import ValidationError
+from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT, JudgeRequest, STTRequest, ConflictAnalysisRequest, ConflictAnalysisResponseData, ConflictAnalysisResponse, DataInfoOCR
+from services.situation_summary import situation_summary_GPT, stt_model, generate_response, test_response
 from services.audio_process import process_audio_file
 from services.image_process import process_image_file
 from core.logging import logger
@@ -43,7 +44,8 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
         backend_payload = analysis_result['data']
 
         # 백엔드 서버 URL 설정 -> 이부분 수정해야 함
-        backend_server_url = os.getenv("BACKEND_SERVER_URL", "https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback")
+        backend_server_url = os.getenv("BACKEND_SERVER_URL",
+                                       "https://api.ktb-aimo.link/api/v1/private-posts/judgement/callback")
 
         # 백엔드 서버로 데이터 전송
         async with httpx.AsyncClient() as client:
@@ -76,6 +78,7 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
         logger.error(f"Unexpected error during conflict analysis: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during conflict analysis")
 
+
 @router.post("/speech-to-text", response_model=dict, status_code=201)
 async def get_voice(request: STTRequest):
     logger.info("get_infos start")
@@ -105,6 +108,7 @@ async def get_voice(request: STTRequest):
     }
     logger.info(f"Response: {response}")
     return response
+
 
 @router.post("/image-to-text", response_model=dict, status_code=201)
 async def get_image(request: STTRequest):
@@ -416,9 +420,12 @@ def process_message(ch, method, properties, body):
         logger.error(f"Error processing message: {e}")
         # 실패 메시지 재시도 방지
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+
+
 port = 5671
 # vhost = "/"
 rabbitmq_url = f"amqps://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_URL}:{port}"
+
 
 def start_worker():
     """
@@ -459,11 +466,142 @@ def start_worker():
     except Exception as e:
         logger.error(f"알 수 없는 오류 발생: {e}")
 
-# def process_message(ch, method, properties, body):
+
+######################
+OCR_CALLBACK_URL = settings.OCR_CALLBACK_URL
+#######################
+# #OCR 비동기 처리입니다. 필요시 활성화 하세요
+#
+# @router.post("/image-to-text", response_model=dict, status_code=202)
+# async def process_image(request: STTRequest, background_tasks: BackgroundTasks):
 #     """
-#     메시지 처리 콜백 함수
+#     요청을 수락하고 202 응답을 반환.
+#     BackgroundTasks를 이용해 OCR 작업 수행 후 결과를 CALLBACK_URL로 POST 전송.
 #     """
-#     decoded_body = body.decode('utf-8')
-#     logger.info(f"Received message: {decoded_body}")
-#     # 메시지 처리 로직 추가
-#     ch.basic_ack(delivery_tag=method.delivery_tag)  # 메시지 확인
+#     logger.info("Received image-to-text request")
+#     logger.info(f"Image URL: {request.url}")
+#
+#     # URL이 제공되지 않은 경우 오류 반환
+#     if not request.url:
+#         raise HTTPException(status_code=400, detail="URL_NOT_PROVIDED")
+#
+#     # Background 작업 등록
+#     logger.info("Starting background task for OCR processing...")
+#     background_tasks.add_task(execute_OCR_and_callback, request.url)
+#
+#     # 202 Accepted 응답 반환
+#     return {"status": "accepted", "message": "OCR processing started."}
+
+#################3
+#OCR_MQ부분입니다.
+def execute_OCR_and_callback(url: str):
+    """
+    OCR 호출 후 결과를 OCR_CALLBACK_URL로 전송
+    """
+    try:
+        logger.info("Executing OCR function...")
+        transcription = process_image_file(url)  # OCR 처리
+
+        # DataInfoOCR 데이터 생성
+        ocr_data = {
+            "status": bool(transcription),  # script가 있으면 True
+            "url": url,
+            "script": transcription,
+            "accessKey": ACCESSTOKEN
+        }
+
+        # DataInfoOCR 모델로 데이터 검증
+        try:
+            validated_data = DataInfoOCR(**ocr_data)
+        except ValidationError as e:
+            logger.error(f"Validation error in OCR data: {e}")
+            raise ValueError("Invalid data format for OCR callback.")
+
+        # 콜백 URL로 데이터 전송
+        logger.info(f"Sending POST request to OCR_CALLBACK_URL with data: {validated_data.dict()}")
+        response = requests.post(OCR_CALLBACK_URL, json=validated_data.dict())
+        logger.info(f"Callback response: {response.status_code}, {response.text}")
+
+    except Exception as e:
+        logger.error(f"Error during OCR processing: {e}")
+        # 실패한 경우 콜백 URL로 에러 메시지 전송
+        error_response = {
+            "status": False,
+            "url": url,
+            "script": None,
+            "accessKey": ACCESSTOKEN
+        }
+        requests.post(CALLBACK_URL, json=error_response)
+
+
+def process_message(ch, method, properties, body):
+    """
+    RabbitMQ 메시지 소비 후 OCR 처리 및 콜백 전송
+    """
+    try:
+        # 메시지 디코딩 및 검증
+        decoded_body = body.decode('utf-8')
+        logger.info(f"Received message: {decoded_body}")
+        message = json.loads(decoded_body)
+
+        # 데이터 검증
+        try:
+            request_data = STTRequest(**message)
+        except ValidationError as e:
+            logger.error(f"Validation error in received message: {e}")
+            raise ValueError("Invalid message format.")
+
+        # OCR 처리 및 콜백 전송
+        execute_OCR_and_callback(request_data.url)
+
+        # 메시지 처리 완료
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        logger.info(f"Message processed successfully: {request_data.url}")
+
+    except Exception as e:
+        logger.error(f"Error processing message: {e}")
+        # 실패 메시지 재시도 방지
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+
+
+port = 5671
+vhost = "/"
+rabbitmq_url = f"amqps://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_URL}:{port}"
+
+
+def start_second_worker():
+    """
+    RabbitMQ 워커 시작
+    """
+    try:
+        # SSL 컨텍스트 설정
+        ssl_context = ssl.create_default_context()
+        ssl_context.verify_mode = ssl.CERT_REQUIRED
+        ssl_context.check_hostname = True
+        ssl_context.load_default_certs()
+
+        # RabbitMQ 연결 설정
+        params = pika.URLParameters(rabbitmq_url)
+        params.ssl_options = pika.SSLOptions(ssl_context)
+
+        connection = pika.BlockingConnection(params)
+        channel = connection.channel()
+
+        # Exchange 및 Queue 설정
+        channel.exchange_declare(exchange="aiOCRExchange", exchange_type="direct", durable=True)
+        channel.queue_declare(queue="aiOCRQueue", durable=True)
+        channel.queue_bind(exchange="aiOCRExchange", queue="aiOCRQueue", routing_key="ai.ocr.key")
+
+        # 메시지 소비 시작
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(queue="aiOCRQueue", on_message_callback=process_message)
+
+        logger.info("OCR Worker is waiting for messages...")
+        channel.start_consuming()
+
+    except ssl.SSLError as e:
+        logger.error(f"SSL 연결 오류 발생: {e}")
+    except pika.exceptions.AMQPConnectionError as e:
+        logger.error(f"OCR RabbitMQ 연결 오류 발생: {e}")
+    except Exception as e:
+        logger.error(f"알 수 없는 오류 발생: {e}")
