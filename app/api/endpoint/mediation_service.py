@@ -76,7 +76,7 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
         logger.error(f"Unexpected error during conflict analysis: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during conflict analysis")
 
-@router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)
+@router.post("/speech-to-text", response_model=dict, status_code=201)
 async def get_voice(request: STTRequest):
     logger.info("get_infos start")
     logger.info(f"audio URL : {request.url}")
@@ -100,17 +100,13 @@ async def get_voice(request: STTRequest):
         raise HTTPException(status_code=500, detail="STT_PROCESSING_ERROR")
 
     # 응답 생성
-    response = VoiceInfo(
-        status="Created",
-        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        data=DataInfoSTT(
-            script=transcription
-        )
-    )
+    response = {
+        "script": transcription
+    }
     logger.info(f"Response: {response}")
     return response
 
-@router.post("/image-to-text", response_model=VoiceInfo, status_code=201)
+@router.post("/image-to-text", response_model=dict, status_code=201)
 async def get_image(request: STTRequest):
     logger.info("get_infos start")
     logger.info(f"image URL : {request.url}")
@@ -135,16 +131,11 @@ async def get_image(request: STTRequest):
         raise HTTPException(status_code=500, detail="OCR_PROCESSING_ERROR")
 
     # 응답 생성
-    response = VoiceInfo(
-        status="Created",
-        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        data=DataInfoSTT(
-            script=transcription
-        )
-    )
+    response = {
+        "script": transcription
+    }
     logger.info(f"Response: {response}")
     return response
-
 
 #동기식 함수
 # @router.post("/judgement", response_model=DataInfoSummary, status_code=201)
