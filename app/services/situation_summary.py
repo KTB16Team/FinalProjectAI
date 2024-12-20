@@ -1,13 +1,20 @@
 import json
 import os
 from dotenv import load_dotenv
-import openai
+from openai import OpenAI
+from pathlib import Path
+
 from services.emotion_behavior_situation import RelationshipAnalyzer
 
-# Load OpenAI API Key
-load_dotenv()
+# .env 파일 경로 설정
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+# OPENAI_API_KEY 환경 변수 로드
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-openai.api_key = OPENAI_API_KEY
+
+# OpenAI 클라이언트 초기화
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Analyzer 객체
 analyzer = RelationshipAnalyzer()
@@ -69,13 +76,11 @@ def test_response(ref_text):
     """
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3
-        )
+        response = client.chat.completions.create(model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3)
         # 응답에서 내용 추출
-        content = response["choices"][0]["message"]["content"]
+        content = response.choices[0].message.content
 
         # JSON 디코딩 시도
         return json.loads(content)
