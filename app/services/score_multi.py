@@ -156,7 +156,7 @@ class ConflictAnalyzer:
         model.eval()
         return model
 
-    async def analyze_content(self, content: str, request_id: str = "id") -> dict:
+    async def analyze_content(self, content: str) -> dict:
         summary_prompt = f"""Analyze the following content and extract the title, plaintiff's stance, and defendant's stance:
         {content}
         
@@ -184,7 +184,7 @@ class ConflictAnalyzer:
                 return {
                     "status": "error",
                     "method": "GPT",
-                    "id": request_id,
+                    "id": 12345,
                     "message": f"Missing fields in response: {missing_fields}"
                 }
         except Exception as e:
@@ -192,7 +192,7 @@ class ConflictAnalyzer:
             return {
                 "status": "error",
                 "method": "GPT",
-                "id": request_id,
+                "id": 12345,
                 "message": "Failed to generate summary"
             }
 
@@ -270,7 +270,7 @@ class ConflictAnalyzer:
             return {
                 "status": True,       
                 "accessKey": "dwqdq",  # accessKey 추가
-                "id": request_id,
+                "id": 12345,
                 "title": basic_info["title"],
                 "stancePlaintiff": basic_info["stancePlaintiff"],
                 "stanceDefendant": basic_info["stanceDefendant"],
@@ -284,16 +284,13 @@ class ConflictAnalyzer:
             return {
                 "status": "error",
                 "method": "GPT",
-                "id": request_id,
+                "id": 12345,
                 "message": str(e)
             }
         
-async def process_request(request_data: dict) -> dict:
+async def process_request(content: str) -> dict:
     analyzer = ConflictAnalyzer()
-    result = await analyzer.analyze_content(
-        content=request_data["content"],
-        request_id=request_data.get("id", "id")
-    )
+    result = await analyzer.analyze_content(content)
     return result
 
 # async def main():
