@@ -79,7 +79,7 @@ async def analyze_conflict(request: ConflictAnalysisRequest):
         logger.error(f"Unexpected error during conflict analysis: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during conflict analysis")
 
-@router.post("/speech-to-text", response_model=dict, status_code=201)
+@router.post("/speech-to-text", response_model=VoiceInfo, status_code=201)  # response_model을 VoiceInfo로 변경
 async def get_voice(request: STTRequest):
     logger.info("get_infos start")
     logger.info(f"audio URL : {request.url}")
@@ -92,19 +92,20 @@ async def get_voice(request: STTRequest):
         parsed_url = urlparse(request.url)
         if not all([parsed_url.scheme, parsed_url.netloc]):
             raise HTTPException(status_code=400, detail="INVALID_URL_FORMAT")
+            
         # 비동기 처리로 S3에서 음성 파일 다운로드 및 텍스트 변환
         transcription = await process_audio_file(request.url)
         logger.info("STT processing completed successfully.")
 
+        # datetime을 문자열로 변환하여 응답 생성
         response = VoiceInfo(
             status="Created",
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            data=DataInfoSTT(
-                script=transcription
-            )
+            data=DataInfoSTT(script=transcription)
         )
-        logger.info(f"Response: {response}")
-        return response
+        
+        logger.info(f"Response: {response.dict()}")  # .dict() 사용하여 로깅
+        return response.dict()  # 딕셔너리로 변환하여 반환
 
     except ClientError as e:
         if e.response['Error']['Code'] == "404":

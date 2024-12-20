@@ -19,8 +19,8 @@ class DataInfoSummary(BaseModel):
 
 class VoiceInfo(BaseModel):
     status: Optional[str]
-    timestamp: Optional[datetime]
-    data: Optional[Union[DataInfoSTT]]
+    timestamp: Optional[str]
+    data: Optional[DataInfoSTT]
 
 class JudgeRequest(BaseModel):
     id: int
