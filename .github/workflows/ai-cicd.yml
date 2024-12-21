@@ -74,12 +74,17 @@ jobs:
       - name: Notify Build Failure
         if: failure()
         run: |
+          # 한국 시간 생성
+          TIMESTAMP=$(TZ='Asia/Seoul' date +'%p %I:%M' | sed 's/AM/오전/g; s/PM/오후/g')
           curl -H "Content-Type: application/json" \
             -d '{
               "embeds": [{
                 "title": "❌ AI Docker Build 및 Push 실패",
                 "description": "헉 레전드 사건 발생!! [로그 확인하기](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                "color": 15158332
+                "color": 15158332,
+                "footer": {
+                  "text": "FinalProjectAI Github Action에서 전송됨 - '"${TIMESTAMP}"'"
+                }
               }]
             }' \
             ${{ secrets.DISCORD_WEBHOOK }}
@@ -153,12 +158,17 @@ jobs:
       - name: Notify Deploy Failure
         if: failure()
         run: |
+          # 한국 시간 생성
+          TIMESTAMP=$(TZ='Asia/Seoul' date +'%p %I:%M' | sed 's/AM/오전/g; s/PM/오후/g')
           curl -H "Content-Type: application/json" \
             -d '{
               "embeds": [{
                 "title": "❌ AI EC2 배포 실패",
                 "description": "헉 레전드 사건 발생!! [로그 확인하기](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                "color": 15158332
+                "color": 15158332,
+                "footer": {
+                  "text": "FinalProjectAI Github Action에서 전송됨 - '"${TIMESTAMP}"'"
+                }
               }]
             }' \
             ${{ secrets.DISCORD_WEBHOOK }}
@@ -169,13 +179,20 @@ jobs:
     if: ${{ needs.build-and-push.result == 'success' && needs.deploy-to-ec2.result == 'success' }}
     steps:
       - name: Notify Success Result
+        env:
+          TIMESTAMP: ${{ github.event.head_commit.timestamp }}
         run: |
+          # 한국 시간 생성
+          TIMESTAMP=$(TZ='Asia/Seoul' date +'%p %I:%M' | sed 's/AM/오전/g; s/PM/오후/g')
           curl -H "Content-Type: application/json" \
             -d '{
               "embeds": [{
                 "title": "✅ AI CI/CD 작업 성공",
-                "description": "모든 작업 성공! 아싸! 성공! [로그 확인하기](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                "color": 3066993
+                "description": "아싸! 성공! [로그 확인하기](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                "color": 3066993,
+                "footer": {
+                  "text": "FinalProjectAI Github Action에서 전송됨 - '"${TIMESTAMP}"'"
+                }
               }]
             }' \
             ${{ secrets.DISCORD_WEBHOOK }}
