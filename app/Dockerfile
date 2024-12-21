@@ -13,7 +13,7 @@ WORKDIR /app
 
 # requirements.txt 복사 및 종속성 설치
 COPY requirements.txt ./
-RUN pip install --no-cache-dir --target=/dependencies -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # 애플리케이션 소스 코드 복사
 COPY . .
@@ -24,8 +24,9 @@ FROM python:3.12-slim
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 빌드 단계에서 설치된 Python 패키지만 복사
-COPY --from=builder /dependencies /usr/local/lib/python3.12/site-packages
+# 빌드 단계에서 설치된 Python 패키지 복사
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 # 애플리케이션 소스 코드 복사
 COPY --from=builder /app /app
 
