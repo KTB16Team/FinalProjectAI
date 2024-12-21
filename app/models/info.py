@@ -3,8 +3,13 @@ from typing import Optional, Union, List
 from datetime import datetime, date
 from services.emotion_behavior_situation import RelationshipAnalyzer, SituationSummary
 
+class OCRRequest(BaseModel):
+    id: int
+    url: str
+
 class DataInfoOCR(BaseModel):
     status: bool
+    id: int
     url: str
     script: Optional[str]
     accessKey: str

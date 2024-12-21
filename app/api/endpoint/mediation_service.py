@@ -1,10 +1,13 @@
 import json
+import asyncio
 import ssl
 from fastapi import APIRouter, HTTPException, Header, status, BackgroundTasks
 from botocore.exceptions import ClientError
 from datetime import datetime
 from pydantic import ValidationError
-from models.info import DataInfoSummary, VoiceInfo, DataInfoSTT, JudgeRequest, STTRequest, ConflictAnalysisRequest, ConflictAnalysisResponseData, ConflictAnalysisResponse, DataInfoOCR
+from models.info import (DataInfoSummary, VoiceInfo, DataInfoSTT, JudgeRequest, STTRequest,
+                         ConflictAnalysisRequest, ConflictAnalysisResponseData,
+                         ConflictAnalysisResponse, DataInfoOCR, OCRRequest)
 from services.situation_summary import situation_summary_GPT, stt_model, generate_response, test_response
 from services.audio_process import process_audio_file
 from services.image_process import process_image_file
@@ -494,17 +497,20 @@ OCR_CALLBACK_URL = settings.OCR_CALLBACK_URL
 
 #################3
 #OCR_MQ부분입니다.
-def execute_OCR_and_callback(url: str):
+async def execute_OCR_and_callback(id: int, url: str):
     """
     OCR 호출 후 결과를 OCR_CALLBACK_URL로 전송
     """
     try:
-        logger.info("Executing OCR function...")
-        transcription = process_image_file(url)  # OCR 처리
+        logger.info(f"Executing OCR function for ID: {id}, URL: {url}")
+
+        # 비동기 OCR 처리
+        transcription = await process_image_file(url)
 
         # DataInfoOCR 데이터 생성
         ocr_data = {
             "status": bool(transcription),  # script가 있으면 True
+            "id": id,
             "url": url,
             "script": transcription,
             "accessKey": ACCESSTOKEN
@@ -523,15 +529,16 @@ def execute_OCR_and_callback(url: str):
         logger.info(f"Callback response: {response.status_code}, {response.text}")
 
     except Exception as e:
-        logger.error(f"Error during OCR processing: {e}")
+        logger.error(f"Error during OCR processing for ID: {id}, URL: {url}, Error: {e}")
         # 실패한 경우 콜백 URL로 에러 메시지 전송
         error_response = {
             "status": False,
+            "id": id,
             "url": url,
             "script": None,
             "accessKey": ACCESSTOKEN
         }
-        requests.post(CALLBACK_URL, json=error_response)
+        requests.post(OCR_CALLBACK_URL, json=error_response)
 
 
 def process_message(ch, method, properties, body):
@@ -546,17 +553,17 @@ def process_message(ch, method, properties, body):
 
         # 데이터 검증
         try:
-            request_data = STTRequest(**message)
+            request_data = OCRRequest(**message)
         except ValidationError as e:
             logger.error(f"Validation error in received message: {e}")
             raise ValueError("Invalid message format.")
 
-        # OCR 처리 및 콜백 전송
-        execute_OCR_and_callback(request_data.url)
+        # 비동기 OCR 처리 및 콜백 전송
+        asyncio.run(execute_OCR_and_callback(request_data.id, request_data.url))
 
         # 메시지 처리 완료
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        logger.info(f"Message processed successfully: {request_data.url}")
+        logger.info(f"Message processed successfully: ID {request_data.id}, URL {request_data.url}")
 
     except Exception as e:
         logger.error(f"Error processing message: {e}")
